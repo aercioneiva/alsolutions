@@ -1,0 +1,33 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "author": "Aércio F Neiva",
+  "scripts": {
+    "start": "npm-run-all -p server queue cron",
+    "server": "node src/server.js", 
+    "dev": "nodemon src/server.js",
+    "queue": "node src/queue.js",
+    "cron": "node src/cron.js"
+  },
+  "dependencies": {
+    "@bull-board/express": "^5.21.4",
+    "axios": "^1.7.7",
+    "bullmq": "^5.12.14",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
+    "ioredis": "^5.4.1",
+    "knex": "^3.1.0",
+    "node-cron": "^3.0.3",
+    "npm-run-all": "^4.1.5",
+    "mysql2": "^3.6.5",
+    "pino": "^9.4.0",
+    "xss-clean": "^0.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
