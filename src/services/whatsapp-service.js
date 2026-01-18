@@ -180,17 +180,10 @@ exports.webhook = async(req) => {
          return new Response(false, 200, '');
       }
 
-      const resChatTypebot =  await typebotService.sendMessageTypeBot(data, resTypebot.sessionId);
-
-      if(!resChatTypebot){
-         return new Response(false, 200, '');
-      }
-
-      const { messages, input, clientSideActions } = resChatTypebot;
+      const { messages, input, clientSideActions } = resTypebot;
 
       await _processMessageTypeBot(messages, input, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract); 
       
-      //_processMessageTypeBot(messages, input, clientSideActions, contactPhoneNumber, idSession, chatwoot,contract);
    }else{
       let mensageSend = message;
       
