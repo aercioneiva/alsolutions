@@ -4,7 +4,7 @@ module.exports = class ContactRepository {
 
    constructor(){}
 
-   async findContact(number, contract) {
+   async findContact({number, contract}) {
       try {
          const [ rows ] = await db.raw(`SELECT id, contract, number, name, created_at, updated_at, last_message
                                           FROM contact 
