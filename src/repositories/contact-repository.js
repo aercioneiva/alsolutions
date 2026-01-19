@@ -31,54 +31,6 @@ module.exports = class ContactRepository {
       }
    }
 
-   async find({number, contract, code}) {
-      try {
-         const [ rows ] = await db.raw(`SELECT contact.id, 
-                                               contact.contract, 
-                                               contact.number, 
-                                               contact.name, 
-                                               contact.created_at, 
-                                               contact.updated_at,
-                                               customer.id AS customer_id,
-                                               customer.name AS customer_name,
-                                               customer.document AS customer_document,
-                                               customer.code AS customer_code
-                                          FROM contact 
-                                          LEFT JOIN contact_customer customer ON customer.contact_id = contact.id AND customer.code=?
-                                         WHERE contact.number=? AND contact.contract=?
-                                      ORDER BY Id DESC 
-                                         LIMIT 1`,[code, number,contract]);
-         
-         if(rows.length > 0){
-            let contact = {
-                id: rows[0].id,
-               contract: rows[0].contract,
-               number: rows[0].number,
-               name: rows[0].name,
-               customer: {},
-               createdAt: rows[0].created_at,
-               updatedAt: rows[0].updated_at
-            }
-
-            if(rows[0].customer_id){
-               contact.customer = {
-                  id: rows[0].customer_id,
-                  name: rows[0].customer_name,
-                  document: rows[0].customer_document,
-                  code: rows[0].customer_code   
-               }
-            }
-
-            return contact;
-         }
-         
-         return null;
-      } catch (error) {
-         console.error('Error in contact repository find:', error);
-         throw error;
-      }
-   }
-
    async create(contact) {
       try {
          const {contract, number, name} = contact;

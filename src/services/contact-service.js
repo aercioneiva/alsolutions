@@ -41,21 +41,13 @@ exports.createContact = async (contact) => {
    }
 
    try {
-      const oldContact = await contactRepository.find({number: contact.number.replace(/\D/g, ''), contract: contact.contract, code: contact.customer_code});
+      const oldContact = await contactRepository.findContact({number: contact.number.replace(/\D/g, ''), contract: contact.contract});
       if(!oldContact){
-         
          const contactId = await contactRepository.create(contact);
-         await contactRepository.createCustomer(contactId, contact);
-
+        
          return contactId;
       }
-      
-
-      if(!oldContact.customer.id){
-         await contactRepository.createCustomer(oldContact.id, contact);
-         return oldContact.id;
-      }
-
+   
       return oldContact.id;
    } catch (error) {
       console.log(error);
