@@ -30,14 +30,12 @@ module.exports = class SessiontRepository {
 
    async create(sessionCreate) {
       const {contract, number, session, conversation , ticket } = sessionCreate;
-      const time = new Date().toISOString().replace('T', ' ').replace('Z', '');
       let data = {
          contract,
          number,
          session,
          conversation: 0,
-         ticket: 0,
-         updated_at: time,
+         ticket: 0
       }
 
       if(conversation){

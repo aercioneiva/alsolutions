@@ -19,7 +19,7 @@ exports.getContact = async ({number,contract}) => {
    }
 
    try {
-      return await contactRepository.findContact(number.replace(/\D/g, ''), contract);
+      return await contactRepository.findContact({number: number.replace(/\D/g, ''), contract});
    } catch (error) {
       Logger.error(error)
    }
