@@ -89,8 +89,6 @@ exports.gerarPesquisaSatisfacao = async (company, ticket) => {
         return res.data;
     } catch (error) {
         Logger.error(`[SERVICE-RBXSOFT] Não conseguiu gerar o link da pesquisa de satisfação`);
-        Logger.info(error);
-        Logger.error({generate_questionare_link: {ticket: ticket}});
     }
     return null;
 }
