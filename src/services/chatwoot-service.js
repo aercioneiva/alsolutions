@@ -243,18 +243,23 @@ async function _handleConversationResolved(req, company, contract) {
          let data = {
             messaging_product: 'whatsapp',
             to: customerPhoneNumber,
-            text: { body: `{{Empresa}}
-               🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.
-               
-               Para melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!
-               
-               👉 link `},
+            text: { body: `Chat encerrado!` },
             contract
          };
          ZapQueue.add(EnviarMensagemZap.key, data);
+      }  
          
+
+      // Envia mensagens para RBXSoft se houver ticket
+      if (sessionExists?.ticket > 0) {
+         const messages = await _getMessages(company.account, conversationId);
+         if (messages.length > 0) {
+            const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
+            await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
+         }
+
          const gerarPesquisaSatisfacao = await rbxsoftService.gerarPesquisaSatisfacao(company, sessionExists.ticket);
-         if(gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link){ {
+         if(gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link){
             const linkPesquisa = gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link;   
             let data2 = {
                messaging_product: 'whatsapp',
@@ -268,14 +273,6 @@ async function _handleConversationResolved(req, company, contract) {
                contract
             };
             ZapQueue.add(EnviarMensagemZap.key, data2);
-         }
-
-      // Envia mensagens para RBXSoft se houver ticket
-      if (sessionExists?.ticket > 0) {
-         const messages = await _getMessages(company.account, conversationId);
-         if (messages.length > 0) {
-            const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
-            await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
          }
       }
    } catch (error) {
