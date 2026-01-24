@@ -54,6 +54,7 @@ exports.webhook = async(req) => {
 
       //salva no cache a empresa
       Cache.set(contract,JSON.stringify({
+         name: responseCompany.name,
          contract: contract, 
          account: responseCompany.account,
          inbox: responseCompany.inbox,
