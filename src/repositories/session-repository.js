@@ -5,21 +5,24 @@ module.exports = class SessiontRepository {
    constructor(){}
 
    async find(number) {
-      const [ rows ] = await db.raw(`SELECT * FROM session WHERE number=? ORDER BY Id DESC LIMIT 1`,[number]);
+   const row = await db('session')
+         .select('id','number','session','conversation','ticket','updated_at')
+         .where('number', number)
+         .orderBy('id', 'desc')
+         .first();
 
-      let session = {};
-      if(rows.length > 0){
-         session.id = rows[0].id;
-         session.number = rows[0].number;
-         session.session = rows[0].session;
-         session.conversation = rows[0].conversation;
-         session.ticket = rows[0].ticket;
-         session.updatedAt = rows[0].updated_at;
-         
-         return session;
+      if (!row) {
+         return null;
       }
-      
-      return null;
+
+      return {
+         id: row.id,
+         number: row.number,
+         session: row.session,
+         conversation: row.conversation,
+         ticket: row.ticket,
+         updatedAt: row.updated_at
+      };
    }
 
    async findExpirationSession(contract) {
@@ -84,7 +87,15 @@ module.exports = class SessiontRepository {
    }
 
    async deleteExpirationSession(contract, downtime) {
-      return await db('session').whereRaw('contract=? AND FLOOR(TIMESTAMPDIFF(SECOND, updated_at, NOW()) / 60) >=? AND conversation=0',[contract,downtime]).delete().limit(1);
+      return await db('session')
+         .where('contract', contract)
+         .where('conversation', 0)
+         .whereRaw(
+            'updated_at <= DATE_SUB(NOW(), INTERVAL ? MINUTE)',
+            [downtime]
+         )
+         .limit(1)
+         .delete();
    }
 
 }

@@ -15,24 +15,15 @@ const { getFileWhatsapp } = require('../utils/get-file-whatsapp');
 const Response = require('../utils/response');
 
 exports.webhook = async(req) => {
+   if(req.body.entry?.[0]?.changes[0]?.value?.statuses){
+      return new Response(true, 200, '');// mensagem de status, nao processar
+   }
+
    if(process.env.NODE_ENV == 'development'){
       console.log("Zap webhook message:", JSON.stringify(req.body, null, 2));
    }
 
-   let contract;
-   let session;
-   let sendFromApi;
-   let message = '';
-   let conversationId = 0;
-   let idSession;
-   let account;
-   let inbox;
-   let chatwoot;
-
-   let contactPhoneNumber;
-   let contactName;
-
-   contract = req.query.contract;
+   const contract = req.query?.contract;
    
 
    if(!contract){
@@ -40,11 +31,16 @@ exports.webhook = async(req) => {
       return new Response(false, 200, '');
    }
 
-   sendFromApi = req.body.entry?.[0]?.changes[0]?.value?.statuses;
-
-   if(sendFromApi){
-      return new Response(true, 200, '');
-   }
+   let session;
+   let message = '';
+   let conversationId = 0;
+   let idSession;
+   let account;
+   let inbox;
+   let chatwoot;
+   let contactPhoneNumber;
+   let contactName;
+   
 
    const cacheCompany = await Cache.get(contract);
 
