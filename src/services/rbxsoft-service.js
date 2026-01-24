@@ -61,12 +61,36 @@ exports.incluirMensagemAtendimento = async (company, messages) => {
             }
         });
 
-        console.log('incluirMensagemAtendimento', res.data);
-
         return res.data;
     } catch (error) {
         Logger.error(`[SERVICE-RBXSOFT] Não conseguiu incuir as mensagens no atendimento`);
         Logger.info(error);
+        Logger.error({ chat_messages: messages });
+    }
+    return null;
+}
+
+exports.gerarPesquisaSatisfacao = async (company, ticket) => {
+    try {
+        const res = await axios({
+            method: "POST",
+            url: `${company.host}/routerbox/ws_json/ws_json.php`,
+            headers: {
+                'Content-Type': 'application/json',
+                'authentication_key': company.key_integration
+            },
+            data : {
+                generate_questionare_link: {
+                    ticket: ticket
+                }
+            }
+        });
+
+        return res.data;
+    } catch (error) {
+        Logger.error(`[SERVICE-RBXSOFT] Não conseguiu gerar o link da pesquisa de satisfação`);
+        Logger.info(error);
+        Logger.error({generate_questionare_link: {ticket: ticket}});
     }
     return null;
 }

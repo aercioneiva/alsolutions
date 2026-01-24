@@ -240,14 +240,35 @@ async function _handleConversationResolved(req, company, contract) {
       // Envia mensagem de encerramento se dentro da janela de 24h
       const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
       if (_isWithin24hWindow(contact?.lastMessage)) {
-         const data = {
+         let data = {
             messaging_product: 'whatsapp',
             to: customerPhoneNumber,
-            text: { body: 'Chat finalizado' },
+            text: { body: `{{Empresa}}
+               🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.
+               
+               Para melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!
+               
+               👉 link `},
             contract
          };
          ZapQueue.add(EnviarMensagemZap.key, data);
-      }
+         
+         const gerarPesquisaSatisfacao = await rbxsoftService.gerarPesquisaSatisfacao(company, sessionExists.ticket);
+         if(gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link){ {
+            const linkPesquisa = gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link;   
+            let data2 = {
+               messaging_product: 'whatsapp',
+               to: customerPhoneNumber,
+               text: { body: `{{Empresa}}
+                  🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.
+                  
+                  Para melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!
+                  
+                  👉 ${linkPesquisa} `},
+               contract
+            };
+            ZapQueue.add(EnviarMensagemZap.key, data2);
+         }
 
       // Envia mensagens para RBXSoft se houver ticket
       if (sessionExists?.ticket > 0) {
@@ -312,7 +333,7 @@ async function _handleConversationCreated(req, company, contract) {
          const ticketResponse = await rbxsoftService.abrirAtendimento(company, { customer: customerId });
          console.log('[CHATWOOT] Ticket criado:', ticketResponse);
 
-         if (sessionExists) {
+         if (sessionExists && ticketResponse?.result?.NumeroAtendimento) {
             await sessionService.updateSession(sessionExists.id, {
                ticket: ticketResponse.result.NumeroAtendimento
             });
