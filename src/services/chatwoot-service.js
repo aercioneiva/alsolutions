@@ -264,7 +264,7 @@ async function _handleConversationResolved(req, company, contract) {
             let data2 = {
                messaging_product: 'whatsapp',
                to: customerPhoneNumber,
-               text: { body: `{{Empresa}}\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n👉 ${linkPesquisa} `},
+               text: { body: `{{Empresa}}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `},
                contract
             };
             ZapQueue.add(EnviarMensagemZap.key, data2);
