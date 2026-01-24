@@ -532,6 +532,7 @@ async function _getMessages(account, conversationId) {
 function _mapMessagesToRbxFormat(messages, customerId, ticketId) {
    return messages
       .filter(msg => msg.private === false)
+      .filter(msg => msg.content !== null)
       .map(msg => ({
          record: _getDateTime(msg.created_at),
          customer: customerId,
