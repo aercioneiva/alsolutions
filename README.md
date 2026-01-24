@@ -64,6 +64,7 @@ CREATE DATABASE alsolutions;
 
 CREATE TABLE company(
     id bigint(18) PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
     contract uuid NOT NULL,
     account INT(5) NOT NULL,
     inbox INT(5) NOT NULL,

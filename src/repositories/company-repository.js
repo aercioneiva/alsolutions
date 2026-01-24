@@ -10,6 +10,7 @@ module.exports = class CompanyRepository {
          if(rows.length > 0){
             return {
                id: rows[0].id,
+               name: rows[0].name,
                contract: rows[0].contract,
                account: rows[0].account,
                inbox: rows[0].inbox,
@@ -36,6 +37,7 @@ module.exports = class CompanyRepository {
 
          return rows.map(row => ({
             id: row.id,
+            name: row.name,
             contract: row.contract,
             account: row.account,
             inbox: row.inbox,
@@ -55,9 +57,10 @@ module.exports = class CompanyRepository {
 
    async create(company) {
       try {
-         const {contract, account, inbox, downtime, system } = company;
+         const {contract, account, inbox, downtime, system, name } = company;
 
          const [ id ] = await db.insert({
+            name,
             contract,
             account, 
             inbox, 
