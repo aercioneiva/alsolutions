@@ -251,7 +251,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
          ZapQueue.add(EnviarMensagemZap.key,data);
       }
 
-      await waitIfExists(clientSideActions, message.id);
+      //await waitIfExists(clientSideActions, message.id);
 
       //não foi tratado os casos abaixo, pq a ideia não enviar nada alem de boletos atraves do typebot
       //message.type == 'image' || 'video' || 'audio'
