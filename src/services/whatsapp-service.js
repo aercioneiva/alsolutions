@@ -327,7 +327,7 @@ function _applyFormatting(element) {
 }
 
 async function waitIfExists(clientSideActions, bubbleId) {
-   if(!clientSideActions || clientSideActions.length === 0) {
+   if(!clientSideActions || !Array.isArray(clientSideActions)) {
     return;
   }
 
