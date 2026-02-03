@@ -177,9 +177,9 @@ exports.webhook = async(req) => {
          return new Response(false, 200, '');
       }
 
-      const { messages, input, clientSideActions } = resTypebot;
+      const { messages, clientSideActions } = resTypebot;
 
-      await _processMessageTypeBot(messages, input, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract); 
+      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract); 
       
    }else{
       let mensageSend = message;
@@ -213,7 +213,7 @@ exports.webhook = async(req) => {
    return new Response(true, 200, '');
 }
 
-async function _processMessageTypeBot (messages, input, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract){
+async function _processMessageTypeBot (messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract){
    const abrirChatWoot = (clientSideActions && clientSideActions[0]?.type == 'chatwoot') ? true: false;
 
    let ultimaMensagem = '';
@@ -236,10 +236,9 @@ async function _processMessageTypeBot (messages, input, clientSideActions, conta
          //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
          if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
             ZapQueue.add(EnviarMensagemZap.key,{messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract});
-
-            await waitIfExists(clientSideActions, message.id);
          }
       }
+
 
       if(message.type == 'embed'){
          const data = { messaging_product: 'whatsapp', to: contactPhoneNumber, type: "document",  document: {
@@ -251,6 +250,8 @@ async function _processMessageTypeBot (messages, input, clientSideActions, conta
 
          ZapQueue.add(EnviarMensagemZap.key,data);
       }
+
+      await waitIfExists(clientSideActions, message.id);
 
       //não foi tratado os casos abaixo, pq a ideia não enviar nada alem de boletos atraves do typebot
       //message.type == 'image' || 'video' || 'audio'
@@ -329,7 +330,7 @@ async function waitIfExists(clientSideActions, bubbleId) {
    if(!clientSideActions || clientSideActions.length === 0) {
     return;
   }
-  
+
   const action = clientSideActions.find(
     item => item.lastBubbleBlockId === bubbleId
   );
