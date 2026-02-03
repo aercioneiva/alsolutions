@@ -11,18 +11,9 @@ process.on('uncaughtException', (err) => {
 
 const redisConnection = require('./db/redis');
 const EnviarMensagemZap = require('./queue-jobs/enviar-mensagem-whatsapp');
-const EnviarMensagemZapApi = require('./queue-jobs/enviar-mensagem-whatsapp-api');
 const EnviarMensagemZapNotifications = require('./queue-jobs/enviar-mensagem-whatsapp-notifications');
 const EnviarMensagemChatWoot = require('./queue-jobs/enviar-mensagem-chatwoot');
 
-function enviarMensagemDelay(delay, value) {
-return new Promise(function(resolve) {
-   setTimeout(async function() {
-      const res = await EnviarMensagemZapApi.handle(value);
-      resolve(res);
-   }, delay);
-});
-}
 
 const workerZap = new Worker(EnviarMensagemZap.key, async job => {
    const res = await EnviarMensagemZap.handle(job.data);
@@ -31,12 +22,7 @@ const workerZap = new Worker(EnviarMensagemZap.key, async job => {
    }
 }, { connection: redisConnection });
 
-const workerZapApi = new Worker(EnviarMensagemZapApi.key, async job => {
-   const res = await enviarMensagemDelay(5000, job.data);
-   if(!res){
-      throw new Error(`Error processing job: ${job.id}`);
-   }
-}, { connection: redisConnection });
+
 
 const workerZapNotifications = new Worker(EnviarMensagemZapNotifications.key, async job => {
 const res = await EnviarMensagemZapNotifications.handle(job.data);

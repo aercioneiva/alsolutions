@@ -4,12 +4,10 @@ const { Queue } = require('bullmq');
 
 const redisConnection = require('../db/redis.js');
 const EnviarMensagemZap = require('../queue-jobs/enviar-mensagem-whatsapp');
-const EnviarMensagemZapApi = require('../queue-jobs/enviar-mensagem-whatsapp-api');
 const EnviarMensagemZapNotifications = require('../queue-jobs/enviar-mensagem-whatsapp-notifications');
 const EnviarMensagemChatWoot = require('../queue-jobs/enviar-mensagem-chatwoot');
 
 
 exports.ZapQueue = new Queue(EnviarMensagemZap.key,{ connection: redisConnection });
-exports.ZapApiQueue = new Queue(EnviarMensagemZapApi.key,{ connection: redisConnection });
 exports.ZapNotificationsQueue = new Queue(EnviarMensagemZapNotifications.key,{ connection: redisConnection });
 exports.ChatQueue = new Queue(EnviarMensagemChatWoot.key,{ connection: redisConnection });

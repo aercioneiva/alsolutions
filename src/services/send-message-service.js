@@ -1,5 +1,4 @@
 const companyService  = require('./company-service');
-const EnviarMensagemZapApi = require('../queue-jobs/enviar-mensagem-whatsapp-api');
 const { ZapApiQueue } = require('../libs/queue');
 
 async function _processarMessage(message,numbers, company) {
@@ -16,10 +15,10 @@ async function _processarMessage(message,numbers, company) {
 async function _sendMessage(message,number, company) {
    const data = { messaging_product: 'whatsapp', to: number, text: {body: message}, contract: company.contract};
    
-   ZapApiQueue.add(EnviarMensagemZapApi.key,data,{
-      attempts: 1,
-      backoff: { type: 'fixed', delay: 10000 }  // 10 segundos de atraso entre tentativas
-   });
+   // ZapApiQueue.add(EnviarMensagemZapApi.key,data,{
+   //    attempts: 1,
+   //    backoff: { type: 'fixed', delay: 10000 }  // 10 segundos de atraso entre tentativas
+   // });
 }
 
 

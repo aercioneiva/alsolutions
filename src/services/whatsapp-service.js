@@ -236,6 +236,8 @@ async function _processMessageTypeBot (messages, input, clientSideActions, conta
          //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
          if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
             ZapQueue.add(EnviarMensagemZap.key,{messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract});
+
+            await waitIfExists(clientSideActions, message.id);
          }
       }
 
@@ -251,55 +253,8 @@ async function _processMessageTypeBot (messages, input, clientSideActions, conta
       }
 
       //não foi tratado os casos abaixo, pq a ideia não enviar nada alem de boletos atraves do typebot
-      //message.type == 'image'
-      //(message.type == 'video'
-      //message.type == 'audio'
+      //message.type == 'image' || 'video' || 'audio'
    }
-
-   /*if(input){
-      if(input.type == 'choice input'){
-         const items = input.items;
-         let data;
-         if(items.length <= 3){
-            data = {
-               messaging_product: "whatsapp",
-               recipient_type: "individual",
-               to: contactPhoneNumber,
-               type: "interactive",
-               interactive: {
-                  type: "button",
-                  header: {
-                     "type":"text",
-                     "text": "Titulo"
-                  },
-                  body: {
-                  text: "Corpo"
-                  },
-                  action: {
-                  buttons: []
-                  }
-               }
-            };
-
-            for (const item of items) {
-               data.interactive.action.buttons.push({type: "reply", reply: { id: item.content, title: item.content}})
-            }
-         }else{
-            let formattedText = '';
-
-            for (const item of items) {
-               formattedText += `▶️ ${item.content}\n`;
-            }
-
-            formattedText = formattedText.replace(/\n$/, '');
-
-            data = { messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}}
-         }
-
-         data.contract=contract;
-         ZapQueue.add(EnviarMensagemZap.key,data);
-      }
-   }*/
 
    if(abrirChatWoot){
       const account = chatwoot.account;
@@ -368,4 +323,22 @@ function _applyFormatting(element) {
    }
 
    return formattedText;
+}
+
+async function waitIfExists(clientSideActions, bubbleId) {
+   if(!clientSideActions || clientSideActions.length === 0) {
+    return;
+  }
+  
+  const action = clientSideActions.find(
+    item => item.lastBubbleBlockId === bubbleId
+  );
+
+  if (!action || action.type !== 'wait' || !action.wait?.secondsToWaitFor) {
+    return;
+  }
+
+  const seconds = action.wait.secondsToWaitFor;
+
+  await new Promise(resolve => setTimeout(resolve, seconds * 1000));
 }
