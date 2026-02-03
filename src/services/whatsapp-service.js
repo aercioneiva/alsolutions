@@ -198,9 +198,9 @@ exports.webhook = async(req) => {
          return new Response(false, 200, '');
       }
 
-      const { messages, input, clientSideActions, progress} = resChatTypebot;
+      const { messages, clientSideActions, progress} = resChatTypebot;
 
-      await _processMessageTypeBot(messages, input, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract);  
+      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
       sessionService.updateSession(idSession,{ updatedAt: new Date().toISOString().replace('T', ' ').replace('Z', '')});
@@ -251,7 +251,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
          ZapQueue.add(EnviarMensagemZap.key,data);
       }
 
-      //await waitIfExists(clientSideActions, message.id);
+      await waitIfExists(clientSideActions, message.id);
 
       //não foi tratado os casos abaixo, pq a ideia não enviar nada alem de boletos atraves do typebot
       //message.type == 'image' || 'video' || 'audio'
