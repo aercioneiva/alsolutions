@@ -4,7 +4,7 @@ const axios = require('axios');
 
 const Logger = require('../libs/logger');
 
-exports.enviarMensagemZapMeta = async function (data){
+exports.enviarMensagemZapMeta = async function(data){
    const token_zap = process.env.ZAP_TOKEN;
    
    if (!token_zap) {
@@ -28,8 +28,6 @@ exports.enviarMensagemZapMeta = async function (data){
          data: data,
          timeout: 30000 // 30 segundos de timeout
       });
-
-      Logger.info('[WHATSAPP] Message sent to Meta successfully');
 
       return true;
    } catch (error) {

@@ -1,6 +1,6 @@
 
 const Logger = require('../libs/logger');
-const whatsappService = require('../services/whatsapp-service');
+const whatsappMessageService = require('../services/whatsapp-message-service');
 
 exports.webhookConfig = async (req, res) =>{
    const verifyToken = "ALSOLUTIONS";
@@ -24,7 +24,7 @@ exports.webhookConfig = async (req, res) =>{
 
 exports.webhook = async (req, res) => {
    
-   const response = await whatsappService.webhook(req);
+   const response = await whatsappMessageService.webhook(req);
 
    if(response.status == true){
       return res.sendStatus(200);

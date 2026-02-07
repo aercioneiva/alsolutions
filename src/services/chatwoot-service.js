@@ -1,16 +1,15 @@
 const axios = require('axios');
 
-const { ZapQueue, ChatQueue } = require('../libs/queue');
+const { ZapQueue } = require('../libs/queue');
 const Cache = require('../libs/cache');
 const Logger = require('../libs/logger');
 const sessionService = require('./session-service');
 const companyService = require('./company-service');
 const rbxsoftService = require('./rbxsoft-service');
 const contactService = require('./contact-service');
-const EnviarMensagemZap = require('../queue-jobs/enviar-mensagem-whatsapp');
-const EnviarMensagemChatWoot = require('../queue-jobs/enviar-mensagem-chatwoot');
 const Response = require('../utils/response');
 const { getTemplateNewMessage } = require('../utils/template-message-whatsapp');
+const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
 
 /**
  * Constantes da aplicação
@@ -146,7 +145,7 @@ async function _handleOutgoingMessage(req, company, contract) {
    // Verifica se o usuário está em outra conversa
    if (sessionExists && sessionExists.conversation !== conversationId) {
       const systemMessage = `[SYSTEM] O Usuário ${_getSessionStatus(sessionExists)}, abra outro chat novamente mais tarde`;
-      _sendSystemMessage(company.account, conversationId, systemMessage);
+      await _sendSystemMessage(company.account, conversationId, systemMessage);
       return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
    }
 
@@ -175,7 +174,7 @@ async function _processMessage(req, company, contract, customerPhoneNumber) {
    if (_hasAttachments(req.body.attachments)) {
       for (const file of req.body.attachments) {
          const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
-         ZapQueue.add(EnviarMensagemZap.key, whatsappFileData);
+         ZapQueue.add('EnviarMensagemZap', whatsappFileData);
       }
    } else {
       const messageData = {
@@ -184,7 +183,7 @@ async function _processMessage(req, company, contract, customerPhoneNumber) {
          text: { body: `*${senderName}:*\n${req.body.content}` },
          contract
       };
-      ZapQueue.add(EnviarMensagemZap.key, messageData);
+      ZapQueue.add('EnviarMensagemZap', messageData);
    }
 }
 
@@ -207,12 +206,12 @@ async function _handleMessageOutside24hWindow(req, company, messageContent, conv
       }
 
       const templateData = getTemplateNewMessage(contract, customerPhoneNumber, req.body.conversation.meta.sender.name, conversationId, 'Em análise');
-      ZapQueue.add(EnviarMensagemZap.key, templateData);
+      ZapQueue.add('EnviarMensagemZap', templateData);
       return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
    }
 
-   _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
-   _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
+   await _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
+   await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
 
    return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
 }
@@ -246,7 +245,7 @@ async function _handleConversationResolved(req, company, contract) {
             text: { body: `Chat encerrado!` },
             contract
          };
-         ZapQueue.add(EnviarMensagemZap.key, data);
+         ZapQueue.add('EnviarMensagemZap', data);
       }  
          
 
@@ -267,7 +266,7 @@ async function _handleConversationResolved(req, company, contract) {
                text: { body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `},
                contract
             };
-            ZapQueue.add(EnviarMensagemZap.key, data2);
+            ZapQueue.add('EnviarMensagemZap', data2);
          }
       }
    } catch (error) {
@@ -287,8 +286,8 @@ async function _handleConversationReopened(req, company, contract) {
 
    if (sessionExists) {
       const statusMessage = _getSessionStatus(sessionExists);
-      _sendSystemMessage(company.account, conversationId, `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`);
-      _sendSystemMessage(company.account, conversationId, '[SYSTEM] Reabra essa conversa novamente mais tarde!');
+      await _sendSystemMessage(company.account, conversationId, `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`);
+      await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Reabra essa conversa novamente mais tarde!');
    } else {
       // Abre conversa novamente
       const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
@@ -302,10 +301,10 @@ async function _handleConversationReopened(req, company, contract) {
       });
 
       if (within24h) {
-         _sendSystemMessage(company.account, conversationId, '[SYSTEM] Conversa reaberta com whatsapp');
+         await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Conversa reaberta com whatsapp');
       } else {
-         _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
-         _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
+         await _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
+         await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
       }
    }
 
@@ -420,18 +419,15 @@ async function _getOrCreateContact(account, inbox, name, customAttributes, heade
 /**
  * Envia uma mensagem de sistema para o ChatWoot
  */
-function _sendSystemMessage(account, conversationId, messageContent) {
+async function _sendSystemMessage(account, conversationId, messageContent) {
    const messageData = {
       type: 'content',
       file: null,
       content: messageContent,
       fileName: null
    };
-   ChatQueue.add(EnviarMensagemChatWoot.key, {
-      data: messageData,
-      account,
-      conversationId
-   });
+
+   await enviarMensagemChatWoot({data: messageData,account,conversationId});
 }
 
 /**

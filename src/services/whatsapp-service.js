@@ -1,7 +1,3 @@
-const axios = require('axios');
-const qs = require('qs');
-
-const { ChatQueue, ZapQueue } = require('../libs/queue');
 const Cache = require('../libs/cache');
 const Logger = require('../libs/logger');
 const sessionService = require('./session-service');
@@ -9,30 +5,16 @@ const companyService = require('./company-service');
 const typebotService = require('./typebot-service');
 const chatwootService = require('./chatwoot-service');
 const contactService = require('./contact-service');
-const EnviarMensagemZap = require('../queue-jobs/enviar-mensagem-whatsapp');
-const EnviarMensagemChatWoot = require('../queue-jobs/enviar-mensagem-chatwoot');
 const { getFileWhatsapp } = require('../utils/get-file-whatsapp');
-const Response = require('../utils/response');
+const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
+const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
 
-exports.webhook = async(req) => {
-   if(req.body.entry?.[0]?.changes[0]?.value?.statuses){
-      return new Response(true, 200, '');// mensagem de status, nao processar
-   }
 
-   if(process.env.NODE_ENV == 'development'){
-      console.log("Zap webhook message:", JSON.stringify(req.body, null, 2));
-   }
 
-   const contract = req.query?.contract;
+exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    
-
-   if(!contract){
-      Logger.error(`[WHATSAPP] Não foi informado o contrato da integração`);
-      return new Response(false, 200, '');
-   }
-
    let session;
-   let message = '';
+   let messagem = '';
    let conversationId = 0;
    let idSession;
    let account;
@@ -48,11 +30,9 @@ exports.webhook = async(req) => {
       const responseCompany = await companyService.getCompany(contract);
 
       if(!responseCompany){
-         Logger.error(`[WHATSAPP] Não achou a integracão ${contract}`);
-         return new Response(false, 500, `[WHATSAPP] Não achou a integracão ${contract}`);
+        return; 
       }
 
-      //salva no cache a empresa
       Cache.set(contract,JSON.stringify({
          name: responseCompany.name,
          contract: contract, 
@@ -69,7 +49,6 @@ exports.webhook = async(req) => {
       inbox = responseCompany.inbox;
       system = responseCompany.system;
       chatwoot = { account, inbox };
-
    }else{
       const cp = JSON.parse(cacheCompany);
       account = cp.account;
@@ -78,13 +57,13 @@ exports.webhook = async(req) => {
       chatwoot = { account, inbox };
    }
 
-   contactPhoneNumber = req.body.entry?.[0]?.changes[0]?.value?.contacts?.[0]?.wa_id || '';
-   contactName = req.body.entry?.[0]?.changes[0]?.value?.contacts?.[0]?.profile?.name || 'sem nome';
+   contactPhoneNumber = contacts?.[0]?.wa_id || '';
+   contactName = contacts?.[0]?.profile?.name || 'sem nome';
 
-   if(req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]?.type == 'text'){
-      message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]?.text?.body;
-   }else if(req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]?.type == 'button'){
-      message = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0]?.button?.text;
+   if(message?.type == 'text'){
+      messagem = message.text?.body;
+   }else if(message?.type == 'button'){
+      messagem = message.button?.text;
    }
    
    
@@ -104,8 +83,8 @@ exports.webhook = async(req) => {
       let idMedia;
       let fileName = '';
 
-      if(message){
-         formData = {type: 'content', file: null, content: message, fileName: null};
+      if(messagem){
+         formData = {type: 'content', file: null, content: messagem, fileName: null};
       }else{
          const {
             type, 
@@ -113,7 +92,7 @@ exports.webhook = async(req) => {
             video, 
             document,
             sticker, 
-            image } = req.body.entry?.[0]?.changes[0]?.value?.messages?.[0];
+            image } = message;
             
          if(type == 'audio'){
             idMedia = audio?.id;
@@ -131,7 +110,7 @@ exports.webhook = async(req) => {
             const ext = document?.filename.split('.').pop();
             const extensionsNotAllowed = ['php', 'exe', 'js', 'sh', 'bat', 'cmd', 'com', 'scr', 'py', 'jar', 'vbs', 'msi', 'reg', 'dll'];
             if(extensionsNotAllowed.includes(ext)){
-               return new Response(true, 200, '');
+               return;
             }
          }else if(type == 'sticker'){
             idMedia = sticker?.id;
@@ -144,20 +123,20 @@ exports.webhook = async(req) => {
          
       }
       
-      ChatQueue.add(EnviarMensagemChatWoot.key, {data: formData, account, conversationId});
+      await enviarMensagemChatWoot({data: formData, account, conversationId});
 
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
       contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
       
-      return new Response(true, 200, '');
+      return;
    }
       
    //se nao esta em conversa, verifica se ja esta em um fluxo typebot.
    // se nao tem sessao, inicia com o typebot, caso contrario da continuida no fluxo do typebot
    if(!session){
       const data = {
-         message: message,
+         message: messagem,
          prefilledVariables: {
             cliente_telefone: `${contactPhoneNumber}`,
             cliente_codigo: contactName,
@@ -168,13 +147,13 @@ exports.webhook = async(req) => {
       const resTypebot = await typebotService.startTypeBot(data);
 
       if(!resTypebot){
-         return new Response(false, 200, '');
+         return;
       }
       
       idSession = await sessionService.createSession({contract: contract, number: contactPhoneNumber, session: resTypebot.sessionId});
 
       if(!idSession){
-         return new Response(false, 200, '');
+         return;
       }
 
       const { messages, clientSideActions } = resTypebot;
@@ -182,7 +161,7 @@ exports.webhook = async(req) => {
       await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract); 
       
    }else{
-      let mensageSend = message;
+      let mensageSend = messagem;
       
       if(mensageSend == 'nao' || mensageSend == 'não' || mensageSend == 'Nao'){
          mensageSend = 'Não';
@@ -195,7 +174,7 @@ exports.webhook = async(req) => {
       const resChatTypebot =  await typebotService.sendMessageTypeBot(data, session);
 
       if(!resChatTypebot){
-         return new Response(false, 200, '');
+         return;
       }
 
       const { messages, clientSideActions, progress} = resChatTypebot;
@@ -210,7 +189,7 @@ exports.webhook = async(req) => {
       }
    }
 
-   return new Response(true, 200, '');
+   return;
 }
 
 async function _processMessageTypeBot (messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract){
@@ -235,7 +214,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
          //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
          if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
-            ZapQueue.add(EnviarMensagemZap.key,{messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract});
+            await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract});
          }
       }
 
@@ -248,7 +227,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
          contract: contract
          };
 
-         ZapQueue.add(EnviarMensagemZap.key,data);
+         await enviarMensagemZapMeta(data);
       }
 
       await waitIfExists(clientSideActions, message.id);
@@ -273,7 +252,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
          await contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
          let formData = {type: 'content', file: '', content: '[SYSTEM] Cliente Solicitando Atendimento', fileName: ''};
 
-         ChatQueue.add(EnviarMensagemChatWoot.key, {data: formData, account, conversationId});
+         await enviarMensagemChatWoot({data: formData, account, conversationId});
          
          //atualiza para conversa ativa
          sessionService.updateSession(idSession,{ conversation: conversationId});

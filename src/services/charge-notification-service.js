@@ -2,7 +2,6 @@ const axios = require('axios');
 const Logger = require('../libs/logger');
 
 const companyService  = require('./company-service');
-const EnviarMensagemZapNotifications = require('../queue-jobs/enviar-mensagem-whatsapp-notifications');
 const { ZapNotificationsQueue } = require('../libs/queue');
 
 
@@ -32,7 +31,7 @@ async function _processarMessage(message, numbers, company) {
                contract: company.contract
          };
          
-         ZapNotificationsQueue.add(EnviarMensagemZapNotifications.key,data);
+         ZapNotificationsQueue.add('EnviarMensagemZapNotifications',data);
 
          //manda pdf/pix de cobrança
          for(const boleto of response.data.result) {
@@ -67,7 +66,7 @@ async function _processarMessage(message, numbers, company) {
                      contract: company.contract
                   };
                   
-                  ZapNotificationsQueue.add(EnviarMensagemZapNotifications.key,data);
+                  ZapNotificationsQueue.add('EnviarMensagemZapNotifications',data);
                }
 
                if(pixCopiaCola){
@@ -80,7 +79,7 @@ async function _processarMessage(message, numbers, company) {
                      contract: company.contract
                   };
                   
-                  ZapNotificationsQueue.add(EnviarMensagemZapNotifications.key,data);
+                  ZapNotificationsQueue.add('EnviarMensagemZapNotifications',data);
                }
          }
       }

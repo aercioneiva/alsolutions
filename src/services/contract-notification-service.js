@@ -3,7 +3,6 @@ const Logger = require('../libs/logger');
 
 
 const companyService  = require('./company-service');
-const EnviarMensagemZapNotifications = require('../queue-jobs/enviar-mensagem-whatsapp-notifications');
 const { ZapNotificationsQueue } = require('../libs/queue');
 
 async function _processarMessage(cliente, contrato, evento, company, number) {
@@ -70,7 +69,7 @@ async function _processarMessage(cliente, contrato, evento, company, number) {
                contract: company.contract
          };
 
-         ZapNotificationsQueue.add(EnviarMensagemZapNotifications.key,data);
+         ZapNotificationsQueue.add('EnviarMensagemZapNotifications',data);
       }
    } catch (error) {
       Logger.error(`[SERVICE-CONTRACT-NOTIFICATION] Erro ao recuperar cliente: ${cliente} - ${error}`);

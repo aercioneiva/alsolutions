@@ -1,9 +1,11 @@
 ## parte 1 
 >(API)
-- [ ] tratar anexo malicioso vindo do zap 
+- [ ] terminar fila de mensagem, aplicar lock
+- [ ] implementar timezone correto 
+- [X] tratar anexo malicioso vindo do zap 
 - [ ] rever template de nova conversa, esta fixo
 - [ ] ajustar a configuracao do webook da meta para receber o contrato do cliente ao inves de "ALSOLUTIONS"
-- [x] ao encerrar uma conversa, validar se é a mesma que o usuario esta em aberta para poder noficar corretamente
+- [X] ao encerrar uma conversa, validar se é a mesma que o usuario esta em aberta para poder noficar corretamente
 - [X] implementar uma logica para mensagem ativa conversa
 - [x] implementar a logica de cache para pegar os dados da empresa, aplicar padrão adpter
 - [X] implementar recurso de atualizar a data da ultima mensagem enviada pelo usuario
@@ -62,8 +64,26 @@ telefones são os números que devem receber a mensagem (para vários números s
 
 CREATE DATABASE alsolutions;
 
+CREATE TABLE whatsapp_messages (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  message_id VARCHAR(255) UNIQUE,
+  user_id VARCHAR(255) NOT NULL,
+  phone_number VARCHAR(50) NOT NULL,
+  message_data JSON NOT NULL,
+  status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
+  attempts INT DEFAULT 0,
+  error_message TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  processed_at DATETIME NULL,
+  
+  INDEX idx_user_status (user_id, status, created_at),
+  INDEX idx_status_created (status, created_at),
+  INDEX idx_phone (phone_number)
+) ENGINE=InnoDB;
+
 CREATE TABLE company(
     id bigint(18) PRIMARY KEY AUTO_INCREMENT,
+    contract uuid NOT NULL,
     name VARCHAR(100) NOT NULL,
     contract uuid NOT NULL,
     account INT(5) NOT NULL,
@@ -72,8 +92,8 @@ CREATE TABLE company(
     system VARCHAR(60) NOT NULL,
     host VARCHAR(255) NOT NULL,
     key_integration varchar(100) NOT NULL,
-    fluxo` int(3) NOT NULL,
-    topico` int(3) NOT NULL,
+    fluxo int(3) NOT NULL,
+    topico int(3) NOT NULL,
     status char(1) NOT NULL
 );
 
@@ -82,9 +102,9 @@ CREATE TABLE contact(
     contract uuid NOT NULL,
     number VARCHAR(20) NOT NULL,
     name VARCHAR(100) NOT NULL,
-    last_message TIMESTAMP(3) DEFAULT NULL,
-    created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    last_message DATETIME DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uk_contact_number (number)
 );
 
@@ -94,8 +114,8 @@ CREATE TABLE `contact_customer` (
   `name` varchar(100) NOT NULL,
   `document` varchar(19) NOT NULL,
   `code` varchar(36) NOT NULL,
-  `created_at` TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  `updated_at` TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`contact_id`) REFERENCES `contact` (`id`) ON DELETE RESTRICT
 );
 
@@ -107,7 +127,7 @@ CREATE TABLE session(
     session VARCHAR(60) NOT NULL,
     conversation bigint NOT NULL,
     ticket bigint NOT NULL,
-    updated_at TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
@@ -116,7 +136,7 @@ ALTER TABLE `contact`
 ADD INDEX `contract_number` (`contract`, `number`);
 
 
-INSERT INTO company (contract,account,inbox,downtime,system,status) VALUES ('1220F3E9-F792-40CD-937A-F9FC6F79395F',1,1,5,'routerbox','A');
+INSERT INTO company (name,contract,account,inbox,downtime,system,status, host,key_integration,fluxo,topico) VALUES ('my company','1220F3E9-F792-40CD-937A-F9FC6F79395F',1,1,5,'routerbox','A','','',0,0);
 
 
 
