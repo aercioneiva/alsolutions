@@ -55,7 +55,7 @@ const messageWorker = new Worker(
          WHERE id = ?`,
         ['completed', dbId]
       );
-      
+
       return { success: true};
     } catch (error) {
      Logger.error(`❌ Erro ao processar mensagem ${message.id}:`, error);
@@ -80,10 +80,6 @@ const messageWorker = new Worker(
     },
   }
 );
-
-messageWorker.on('completed', (job) => {
-  Logger.info(`Job ${job.id} completado`);
-});
 
 messageWorker.on('failed', (job, err) => {
   Logger.error(`Job ${job.id} falhou após ${job.attemptsMade} tentativas:`, err.message);

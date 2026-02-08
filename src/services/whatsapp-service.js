@@ -161,6 +161,11 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract); 
       
    }else{
+
+      if(message?.type !== 'text' && message?.type !== 'button'){
+           await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: 'Mensagem Inválida!'}, contract:contract});
+      }
+
       let mensageSend = messagem;
       
       if(mensageSend == 'nao' || mensageSend == 'não' || mensageSend == 'Nao'){
