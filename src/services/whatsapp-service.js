@@ -163,7 +163,8 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    }else{
 
       if(message?.type !== 'text' && message?.type !== 'button'){
-           await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: 'Mensagem Inválida!'}, contract:contract});
+         await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: 'Mensagem Inválida!'}, contract:contract});
+         return; 
       }
 
       let mensageSend = messagem;
