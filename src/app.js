@@ -12,7 +12,7 @@ const errorHandler = require('./middleware/error-handler');
 const basicAuth = require('./middleware/basic-auth');
 
 const routes = require('./routes');
-const { ZapNotificationsQueue, ChatQueue, HandleMessageWhatsappQueue } = require('./libs/queue');
+const { ZapNotificationsQueue, ChatQueue, HandleMessageWhatsappQueue, ZapQueue } = require('./libs/queue');
 
 const app = express();
 
@@ -22,6 +22,7 @@ serverAdapter.setBasePath('/bullmq');
 createBullBoard({
    queues: [
       new BullMQAdapter(HandleMessageWhatsappQueue),
+      new BullMQAdapter(ZapQueue),
       new BullMQAdapter(ZapNotificationsQueue),
       new BullMQAdapter(ChatQueue)
    ],

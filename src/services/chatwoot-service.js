@@ -11,9 +11,7 @@ const Response = require('../utils/response');
 const { getTemplateNewMessage } = require('../utils/template-message-whatsapp');
 const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
 
-/**
- * Constantes da aplicação
- */
+
 const CONSTANTS = {
    EVENTS: {
       MESSAGE_CREATED: 'message_created',
@@ -54,16 +52,10 @@ const CONSTANTS = {
       USER_IN_BOT_FLOW: 'está em um fluxo do bot aberto',
       USER_IN_ANOTHER_CONVERSATION: 'está em outra conversa aberta',
       CHAT_OUTSIDE_24H_WINDOW: '[SYSTEM] Chat fora da janela de conversa do whatsapp'
-   },
-   STATUS_CODES: {
-      OK: 200,
-      SERVER_ERROR: 500
    }
 };
 
-/**
- * Inicia uma conversa no ChatWoot
- */
+
 exports.startChatwoot = async (account, inbox, name, customAttributes) => {
    const token = process.env.CHATWOOT_TOKEN;
    const headers = { headers: { api_access_token: token } };
@@ -91,9 +83,7 @@ exports.startChatwoot = async (account, inbox, name, customAttributes) => {
    }
 };
 
-/**
- * Processa webhooks do ChatWoot
- */
+
 exports.webhook = async (req) => {
    if (process.env.NODE_ENV === 'development') {
       console.log('[CHATWOOT] webhook message:', JSON.stringify(req.body, null, 1));
@@ -109,32 +99,26 @@ exports.webhook = async (req) => {
       switch (true) {
          case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED && req.body.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
             return await _handleOutgoingMessage(req, company, contract);
-
          case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
             return await _handleConversationResolved(req, company, contract);
-
          case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
             return await _handleConversationReopened(req, company, contract);
-
          case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
             return await _handleConversationCreated(req, company, contract);
-
          default:
-            return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+            return new Response(true, 200, '');
       }
    } catch (error) {
       Logger.error(`[CHATWOOT] Erro ao processar webhook: ${error.message}`);
-      return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+      return new Response(true, 200, '');
    }
 };
 
-/**
- * Trata mensagens de saída (do atendente)
- */
+
 async function _handleOutgoingMessage(req, company, contract) {
    const messagePrivate = req.body.private || false;
    if (messagePrivate) {
-      return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+      return new Response(true, 200, '');
    }
 
    const customerPhoneNumber = req.body.conversation.meta.sender.phone_number.replace('+', '');
@@ -146,7 +130,7 @@ async function _handleOutgoingMessage(req, company, contract) {
    if (sessionExists && sessionExists.conversation !== conversationId) {
       const systemMessage = `[SYSTEM] O Usuário ${_getSessionStatus(sessionExists)}, abra outro chat novamente mais tarde`;
       await _sendSystemMessage(company.account, conversationId, systemMessage);
-      return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+      return new Response(true, 200, '');
    }
 
    const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
@@ -162,19 +146,17 @@ async function _handleOutgoingMessage(req, company, contract) {
       await _processMessage(req, company, contract, customerPhoneNumber);
    }
 
-   return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+   return new Response(true, 200, '');
 }
 
-/**
- * Processa mensagens (texto ou anexos)
- */
+
 async function _processMessage(req, company, contract, customerPhoneNumber) {
    const senderName = req.body.sender.name;
 
    if (_hasAttachments(req.body.attachments)) {
       for (const file of req.body.attachments) {
          const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
-         ZapQueue.add('EnviarMensagemZap', whatsappFileData);
+         ZapQueue.add('EnviarMensagemWhatsapp', whatsappFileData);
       }
    } else {
       const messageData = {
@@ -183,13 +165,11 @@ async function _processMessage(req, company, contract, customerPhoneNumber) {
          text: { body: `*${senderName}:*\n${req.body.content}` },
          contract
       };
-      ZapQueue.add('EnviarMensagemZap', messageData);
+      ZapQueue.add('EnviarMensagemWhatsapp', messageData);
    }
 }
 
-/**
- * Trata mensagens fora da janela de 24h
- */
+
 async function _handleMessageOutside24hWindow(req, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract) {
    if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
       if (!sessionExists) {
@@ -206,19 +186,17 @@ async function _handleMessageOutside24hWindow(req, company, messageContent, conv
       }
 
       const templateData = getTemplateNewMessage(contract, customerPhoneNumber, req.body.conversation.meta.sender.name, conversationId, 'Em análise');
-      ZapQueue.add('EnviarMensagemZap', templateData);
-      return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+      ZapQueue.add('EnviarMensagemWhatsapp', templateData);
+      return new Response(true, 200, '');
    }
 
    await _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
    await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
 
-   return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+   return new Response(true, 200, '');
 }
 
-/**
- * Trata conclusão de conversa
- */
+
 async function _handleConversationResolved(req, company, contract) {
    try {
       const customerId = req.body?.custom_attributes?.codigo_cliente || 0;
@@ -227,7 +205,7 @@ async function _handleConversationResolved(req, company, contract) {
       const sessionExists = await sessionService.getSession(customerPhoneNumber);
 
       if (!sessionExists || sessionExists.conversation !== conversationId) {
-         return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+         return new Response(true, 200, '');
       }
 
       // Deleta a sessão
@@ -245,7 +223,7 @@ async function _handleConversationResolved(req, company, contract) {
             text: { body: `Chat encerrado!` },
             contract
          };
-         ZapQueue.add('EnviarMensagemZap', data);
+         ZapQueue.add('EnviarMensagemWhatsapp', data);
       }  
          
 
@@ -266,19 +244,17 @@ async function _handleConversationResolved(req, company, contract) {
                text: { body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `},
                contract
             };
-            ZapQueue.add('EnviarMensagemZap', data2);
+            ZapQueue.add('EnviarMensagemWhatsapp', data2);
          }
       }
    } catch (error) {
       Logger.error(`${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`);
    }
 
-   return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+   return new Response(true, 200, '');
 }
 
-/**
- * Trata reabertura de conversa
- */
+
 async function _handleConversationReopened(req, company, contract) {
    const customerPhoneNumber = req.body?.meta?.sender?.phone_number.replace('+', '');
    const sessionExists = await sessionService.getSession(customerPhoneNumber);
@@ -308,12 +284,10 @@ async function _handleConversationReopened(req, company, contract) {
       }
    }
 
-   return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+   return new Response(true, 200, '');
 }
 
-/**
- * Trata criação de conversa
- */
+
 async function _handleConversationCreated(req, company, contract) {
    try {
       const customerId = req.body?.custom_attributes?.codigo_cliente || 0;
@@ -334,16 +308,10 @@ async function _handleConversationCreated(req, company, contract) {
       Logger.error(`[CHATWOOT] Erro ao criar conversa: ${error.message}`);
    }
 
-   return new Response(true, CONSTANTS.STATUS_CODES.OK, '');
+   return new Response(true, 200, '');
 }
 
-/**
- * ==================== FUNÇÕES AUXILIARES ====================
- */
 
-/**
- * Carrega dados da empresa do cache ou banco de dados
- */
 async function _loadCompanyData(contract) {
    const cachedCompany = await Cache.get(contract);
 
@@ -372,9 +340,7 @@ async function _loadCompanyData(contract) {
    return companyData;
 }
 
-/**
- * Busca ou cria um contato no ChatWoot
- */
+
 async function _getOrCreateContact(account, inbox, name, customAttributes, headers) {
    const payload = {
       payload: [
@@ -416,9 +382,7 @@ async function _getOrCreateContact(account, inbox, name, customAttributes, heade
    return newContactResponse.data.payload.contact_inbox.source_id;
 }
 
-/**
- * Envia uma mensagem de sistema para o ChatWoot
- */
+
 async function _sendSystemMessage(account, conversationId, messageContent) {
    const messageData = {
       type: 'content',
@@ -430,9 +394,7 @@ async function _sendSystemMessage(account, conversationId, messageContent) {
    await enviarMensagemChatWoot({data: messageData,account,conversationId});
 }
 
-/**
- * Cria dados de arquivo para envio via WhatsApp
- */
+
 function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
    const baseData = {
       messaging_product: 'whatsapp',
@@ -471,25 +433,19 @@ function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
    return { ...baseData, ...config };
 }
 
-/**
- * Valida se há dados de anexos
- */
+
 function _hasAttachments(attachments) {
    return Array.isArray(attachments) && attachments.length > 0;
 }
 
-/**
- * Verifica o status da sessão para mensagem de erro
- */
+
 function _getSessionStatus(session) {
    return session?.conversation > 0
       ? CONSTANTS.ERROR_MESSAGES.USER_IN_ANOTHER_CONVERSATION
       : CONSTANTS.ERROR_MESSAGES.USER_IN_BOT_FLOW;
 }
 
-/**
- * Verifica se a conversa está dentro da janela de 24 horas
- */
+
 function _isWithin24hWindow(date) {
    if (!date) return false;
    const lastMessageDate = new Date(date);
@@ -498,9 +454,7 @@ function _isWithin24hWindow(date) {
    return diffHours <= CONSTANTS.HOURS_24;
 }
 
-/**
- * Converte timestamp Unix para formato DateTime (YYYY-MM-DD HH:MM:SS)
- */
+
 function _getDateTime(timestamp) {
    const date = new Date(timestamp * 1000);
 
@@ -515,9 +469,7 @@ function _getDateTime(timestamp) {
    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-/**
- * Busca mensagens de uma conversa no ChatWoot
- */
+
 async function _getMessages(account, conversationId) {
    try {
       const token = process.env.CHATWOOT_TOKEN;
@@ -535,9 +487,7 @@ async function _getMessages(account, conversationId) {
    }
 }
 
-/**
- * Converte mensagens do ChatWoot para formato RBXSoft
- */
+
 function _mapMessagesToRbxFormat(messages, customerId, ticketId) {
    return messages
       .filter(msg => msg.private === false)

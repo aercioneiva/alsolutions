@@ -227,10 +227,10 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
       if(message.type == 'embed'){
          const data = { messaging_product: 'whatsapp', to: contactPhoneNumber, type: "document",  document: {
-            link: message.content.url,
-            filename: message.content.url.split('/')[5] || 'Boleto.pdf'
-         },
-         contract: contract
+               link: message.content.url,
+               filename: message.content.url.split('/')[5] || 'Boleto.pdf'
+            },
+            contract: contract
          };
 
          await enviarMensagemZapMeta(data);
