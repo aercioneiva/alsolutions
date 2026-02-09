@@ -1,9 +1,8 @@
-const chatwootService = require('../services/chatwoot-service');
+const chatwootMessageService = require('../services/chatwoot-message-service');
 
 exports.webhook = async (req, res) => {
    
-   const response = await chatwootService.webhook(req);
-
+   const response = await chatwootMessageService.webhook(req);
    if(response.status == true){
       return res.sendStatus(200);
    }
