@@ -45,7 +45,7 @@ exports.webhook = async (req) => {
             return new Response(true, 200, '');
       }
    } catch (error) {
-      Logger.error(`[CHATWOOT] Erro ao processar webhook: ${error.message}`);
+      Logger.error(`[CHATWOOT] Erro ao processar webhook:`,error);
       return new Response(true, 200, '');
    }
 };
