@@ -1,5 +1,6 @@
 const { HandleMessageChatWootQueue } = require('../libs/queue');
 const Logger = require('../libs/logger');
+const Response = require('../utils/response');
 
 
 const CONSTANTS = {
