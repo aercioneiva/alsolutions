@@ -1,13 +1,12 @@
 const axios = require('axios');
 
-const { ZapQueue } = require('../libs/queue');
+const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
 const Cache = require('../libs/cache');
 const Logger = require('../libs/logger');
 const sessionService = require('./session-service');
 const companyService = require('./company-service');
 const rbxsoftService = require('./rbxsoft-service');
 const contactService = require('./contact-service');
-const Response = require('../utils/response');
 const { getTemplateNewMessage } = require('../utils/template-message-whatsapp');
 const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
 
@@ -84,53 +83,49 @@ exports.startChatwoot = async (account, inbox, name, customAttributes) => {
 };
 
 
-exports.webhook = async (req) => {
-   if (process.env.NODE_ENV === 'development') {
-      console.log('[CHATWOOT] webhook message:', JSON.stringify(req.body, null, 1));
-   }
-
+exports.processMessageChatWoot = async ({ message, contract }) => {
+  
    try {
-      const { contract } = req.query;
       const company = await _loadCompanyData(contract);
 
-      const eventType = req.body.event;
-      const status = req.body.status;
+      const eventType = message.event;
+      const status = message.status;
 
       switch (true) {
-         case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED && req.body.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
-            return await _handleOutgoingMessage(req, company, contract);
+         case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED && message.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
+            return await _handleOutgoingMessage(message, company, contract);
          case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
-            return await _handleConversationResolved(req, company, contract);
+            return await _handleConversationResolved(message, company, contract);
          case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
-            return await _handleConversationReopened(req, company, contract);
+            return await _handleConversationReopened(message, company, contract);
          case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
-            return await _handleConversationCreated(req, company, contract);
+            return await _handleConversationCreated(message, company, contract);
          default:
-            return new Response(true, 200, '');
+            return;
       }
    } catch (error) {
       Logger.error(`[CHATWOOT] Erro ao processar webhook: ${error.message}`);
-      return new Response(true, 200, '');
+      return;
    }
 };
 
 
-async function _handleOutgoingMessage(req, company, contract) {
-   const messagePrivate = req.body.private || false;
+async function _handleOutgoingMessage(message, company, contract) {
+   const messagePrivate = message.private || false;
    if (messagePrivate) {
-      return new Response(true, 200, '');
+      return;
    }
 
-   const customerPhoneNumber = req.body.conversation.meta.sender.phone_number.replace('+', '');
+   const customerPhoneNumber = message.conversation.meta.sender.phone_number.replace('+', '');
    const sessionExists = await sessionService.getSession(customerPhoneNumber);
-   const messageContent = req.body.content;
-   const conversationId = req.body.conversation.id;
+   const messageContent = message.content;
+   const conversationId = message.conversation.id;
 
    // Verifica se o usuário está em outra conversa
    if (sessionExists && sessionExists.conversation !== conversationId) {
       const systemMessage = `[SYSTEM] O Usuário ${_getSessionStatus(sessionExists)}, abra outro chat novamente mais tarde`;
       await _sendSystemMessage(company.account, conversationId, systemMessage);
-      return new Response(true, 200, '');
+      return;
    }
 
    const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
@@ -138,39 +133,39 @@ async function _handleOutgoingMessage(req, company, contract) {
 
    // Se está fora da janela de 24h
    if (!within24h) {
-      return await _handleMessageOutside24hWindow(req, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract);
+      return await _handleMessageOutside24hWindow(message, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract);
    }
 
    // Processa a mensagem normalmente
    if (sessionExists?.conversation === conversationId) {
-      await _processMessage(req, company, contract, customerPhoneNumber);
+      await _processMessage(message, company, contract, customerPhoneNumber);
    }
 
-   return new Response(true, 200, '');
+   return;
 }
 
 
-async function _processMessage(req, company, contract, customerPhoneNumber) {
-   const senderName = req.body.sender.name;
+async function _processMessage(message, company, contract, customerPhoneNumber) {
+   const senderName = message.sender.name;
 
-   if (_hasAttachments(req.body.attachments)) {
-      for (const file of req.body.attachments) {
+   if (_hasAttachments(message.attachments)) {
+      for (const file of message.attachments) {
          const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
-         ZapQueue.add('EnviarMensagemWhatsapp', whatsappFileData);
+         enviarMensagemZapMeta(whatsappFileData);
       }
    } else {
       const messageData = {
          messaging_product: 'whatsapp',
          to: customerPhoneNumber,
-         text: { body: `*${senderName}:*\n${req.body.content}` },
+         text: { body: `*${senderName}:*\n${message.content}` },
          contract
       };
-      ZapQueue.add('EnviarMensagemWhatsapp', messageData);
+      enviarMensagemZapMeta(messageData);
    }
 }
 
 
-async function _handleMessageOutside24hWindow(req, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract) {
+async function _handleMessageOutside24hWindow(message, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract) {
    if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
       if (!sessionExists) {
          const sessionCreated = await sessionService.createSession({
@@ -185,27 +180,27 @@ async function _handleMessageOutside24hWindow(req, company, messageContent, conv
          }
       }
 
-      const templateData = getTemplateNewMessage(contract, customerPhoneNumber, req.body.conversation.meta.sender.name, conversationId, 'Em análise');
-      ZapQueue.add('EnviarMensagemWhatsapp', templateData);
-      return new Response(true, 200, '');
+      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise');
+      enviarMensagemZapMeta(templateData);
+      return;
    }
 
    await _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
    await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
 
-   return new Response(true, 200, '');
+   return;
 }
 
 
-async function _handleConversationResolved(req, company, contract) {
+async function _handleConversationResolved(message, company, contract) {
    try {
-      const customerId = req.body?.custom_attributes?.codigo_cliente || 0;
-      const customerPhoneNumber = req.body?.meta?.sender?.phone_number.replace('+', '');
-      const conversationId = req.body.id;
+      const customerId = message.custom_attributes?.codigo_cliente || 0;
+      const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
+      const conversationId = message.id;
       const sessionExists = await sessionService.getSession(customerPhoneNumber);
 
       if (!sessionExists || sessionExists.conversation !== conversationId) {
-         return new Response(true, 200, '');
+         return;
       }
 
       // Deleta a sessão
@@ -223,7 +218,7 @@ async function _handleConversationResolved(req, company, contract) {
             text: { body: `Chat encerrado!` },
             contract
          };
-         ZapQueue.add('EnviarMensagemWhatsapp', data);
+         enviarMensagemZapMeta(data);
       }  
          
 
@@ -244,21 +239,21 @@ async function _handleConversationResolved(req, company, contract) {
                text: { body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `},
                contract
             };
-            ZapQueue.add('EnviarMensagemWhatsapp', data2);
+            enviarMensagemZapMeta(data2);
          }
       }
    } catch (error) {
       Logger.error(`${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`);
    }
 
-   return new Response(true, 200, '');
+   return;
 }
 
 
-async function _handleConversationReopened(req, company, contract) {
-   const customerPhoneNumber = req.body?.meta?.sender?.phone_number.replace('+', '');
+async function _handleConversationReopened(message, company, contract) {
+   const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
    const sessionExists = await sessionService.getSession(customerPhoneNumber);
-   const conversationId = req.body?.id;
+   const conversationId = message.id;
 
    if (sessionExists) {
       const statusMessage = _getSessionStatus(sessionExists);
@@ -284,14 +279,14 @@ async function _handleConversationReopened(req, company, contract) {
       }
    }
 
-   return new Response(true, 200, '');
+   return;
 }
 
 
-async function _handleConversationCreated(req, company, contract) {
+async function _handleConversationCreated(message, company, contract) {
    try {
-      const customerId = req.body?.custom_attributes?.codigo_cliente || 0;
-      const customerPhoneNumber = req.body?.meta?.sender?.phone_number.replace('+', '');
+      const customerId = message.custom_attributes?.codigo_cliente || 0;
+      const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
       const sessionExists = await sessionService.getSession(customerPhoneNumber);
 
       if (customerId) {
@@ -308,7 +303,7 @@ async function _handleConversationCreated(req, company, contract) {
       Logger.error(`[CHATWOOT] Erro ao criar conversa: ${error.message}`);
    }
 
-   return new Response(true, 200, '');
+   return;
 }
 
 

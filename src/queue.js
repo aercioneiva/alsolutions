@@ -1,9 +1,11 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const { Worker } = require('bullmq');
+const { Worker, tryCatch } = require('bullmq');
 const redisConnection = require('./db/redis');
 const db = require('./db/connection.js');
-const HandleMessageWhatsapp= require('./queue-jobs/handle-message-whatsapp');
+const HandleMessageWhatsapp = require('./queue-jobs/handle-message-whatsapp');
+const HandleMessageChatWoot = require('./queue-jobs/handle-message-chatwoot');
+
 const Logger = require('./libs/logger');
 
 // Controle de concorrência por usuário
@@ -29,7 +31,26 @@ async function acquireUserLock(userId) {
   };
 }
 
-const messageWorker = new Worker(
+const chatWootWorker = new Worker(
+  'ProcessarMensagemChatWoot',
+  async (job) => {
+    await HandleMessageChatWoot.handle(job.data, job);
+  },
+  {
+    connection: redisConnection,
+    concurrency: 1, // Processa até 5 jobs simultaneamente
+  }
+);
+
+chatWootWorker.on('failed', (job, err) => {
+  Logger.error(`Job ${job.id} falhou:`, err.message);
+});
+
+chatWootWorker.on('error', (err) => {
+  Logger.error('Erro no worker ChatWoot:', err);
+});
+
+const whatsappWorker = new Worker(
   'ProcessarMensagemWhatsapp',
   async (job) => {
     const { dbId, message, contacts } = job.data;
@@ -81,11 +102,11 @@ const messageWorker = new Worker(
   }
 );
 
-messageWorker.on('failed', (job, err) => {
+whatsappWorker.on('failed', (job, err) => {
   Logger.error(`Job ${job.id} falhou após ${job.attemptsMade} tentativas:`, err.message);
 });
 
-messageWorker.on('error', (err) => {
+whatsappWorker.on('error', (err) => {
   Logger.error('Erro no worker:', err);
 });
 
@@ -93,12 +114,14 @@ console.log('🚀 Worker iniciado e aguardando mensagens...');
 
 process.on('SIGTERM', async () => {
   console.log('SIGTERM recebido, encerrando worker...');
-  await messageWorker.close();
+  await whatsappWorker.close();
+  await chatWootWorker.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT recebido, encerrando worker...');
-  await messageWorker.close();
+  await whatsappWorker.close();
+  await chatWootWorker.close();
   process.exit(0);
 });
