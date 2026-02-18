@@ -291,7 +291,6 @@ async function _handleConversationCreated(message, company, contract) {
 
       if (customerId) {
          const ticketResponse = await rbxsoftService.abrirAtendimento(company, { customer: customerId });
-         console.log('[CHATWOOT] Ticket criado:', ticketResponse);
 
          if (sessionExists && ticketResponse?.result?.NumeroAtendimento) {
             await sessionService.updateSession(sessionExists.id, {

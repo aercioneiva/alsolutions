@@ -6,28 +6,26 @@ const db = require('./db/connection.js');
 const HandleMessageWhatsapp = require('./queue-jobs/handle-message-whatsapp');
 const HandleMessageChatWoot = require('./queue-jobs/handle-message-chatwoot');
 const Lock = require('./utils/lock');
-
 const Logger = require('./libs/logger');
 
 // Controle de concorrência por usuário
 // Garante que mensagens do mesmo usuário sejam processadas em sequência
 const userLocks = new Lock();
 
-
-
 const chatWootWorker = new Worker(
   'ProcessarMensagemChatWoot',
   async (job) => {
 
     const { messsage } = job.data;
-    if(messsage.coversation){
+    let hasLock = null;
+    if(messsage?.conversation){
       // Adquire lock para esse usuário
-      const hasLock = userLocks.add(messsage.coversation.id, job.id);
+      hasLock = userLocks.add(messsage.conversation.id, job.id);
     
       if(!hasLock){
         // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 1s
         // Isso mantém a mensagem na fila sem bloqueá-la para outra conversas
-        console.log(`[Inbound] Usuário ${messsage.coversation.id} ocupado. Reagendando Job ${job.id}...`);
+        console.log(`[Inbound] Usuário ${messsage.conversation.id} ocupado. Reagendando Job ${job.id}...`);
         await job.moveToDelayed(Date.now() + 2000);
         throw new Error('LOCK_ACQUIRED_BY_ANOTHER_JOB'); // Interrompe a execução atual
       }
@@ -36,15 +34,13 @@ const chatWootWorker = new Worker(
 
     try {
       await HandleMessageChatWoot.handle(job.data, job);
-       return { success: true};
     } catch (error) {
       Logger.error(`❌ Erro ao processar mensagem chatwoot`, error);
-    }finally {
-      if(messsage.coversation){
-        userLocks.remove(messsage.coversation.id); // Libera o lock para essa conversa, permitindo que a próxima mensagem seja processada
+    } finally {
+      if(hasLock){
+        userLocks.remove(messsage.conversation.id); // Libera o lock para essa conversa, permitindo que a próxima mensagem seja processada
       }
     }
-    
   },
   {
     connection: redisConnection,
@@ -53,6 +49,7 @@ const chatWootWorker = new Worker(
 );
 
 chatWootWorker.on('failed', (job, err) => {
+  console.log(err);
   Logger.error(`Job ${job.id} falhou:`, err.message);
 });
 
@@ -95,7 +92,6 @@ const whatsappWorker = new Worker(
         ['completed', dbId]
       );
 
-      return { success: true};
     } catch (error) {
      Logger.error(`❌ Erro ao processar mensagem whatsapp${message.id}:`, error);
 
