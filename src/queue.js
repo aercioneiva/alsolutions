@@ -5,40 +5,50 @@ const redisConnection = require('./db/redis');
 const db = require('./db/connection.js');
 const HandleMessageWhatsapp = require('./queue-jobs/handle-message-whatsapp');
 const HandleMessageChatWoot = require('./queue-jobs/handle-message-chatwoot');
+const Lock = require('./utils/lock');
 
 const Logger = require('./libs/logger');
 
 // Controle de concorrência por usuário
 // Garante que mensagens do mesmo usuário sejam processadas em sequência
-const userLocks = new Map();
+const userLocks = new Lock();
 
-async function acquireUserLock(userId) {
-  if (userLocks.has(userId)) {
-    // Aguarda o lock anterior terminar
-    await userLocks.get(userId);
-  }
 
-  let resolveLock;
-  const lockPromise = new Promise(resolve => {
-    resolveLock = resolve;
-  });
-
-  userLocks.set(userId, lockPromise);
-  
-  return () => {
-    userLocks.delete(userId);
-    resolveLock();
-  };
-}
 
 const chatWootWorker = new Worker(
   'ProcessarMensagemChatWoot',
   async (job) => {
-    await HandleMessageChatWoot.handle(job.data, job);
+
+    const { messsage } = job.data;
+    if(messsage.coversation){
+      // Adquire lock para esse usuário
+      const hasLock = userLocks.add(messsage.coversation.id, job.id);
+    
+      if(!hasLock){
+        // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 1s
+        // Isso mantém a mensagem na fila sem bloqueá-la para outra conversas
+        console.log(`[Inbound] Usuário ${messsage.coversation.id} ocupado. Reagendando Job ${job.id}...`);
+        await job.moveToDelayed(Date.now() + 2000);
+        throw new Error('LOCK_ACQUIRED_BY_ANOTHER_JOB'); // Interrompe a execução atual
+      }
+    }
+    
+
+    try {
+      await HandleMessageChatWoot.handle(job.data, job);
+       return { success: true};
+    } catch (error) {
+      Logger.error(`❌ Erro ao processar mensagem chatwoot`, error);
+    }finally {
+      if(messsage.coversation){
+        userLocks.remove(messsage.coversation.id); // Libera o lock para essa conversa, permitindo que a próxima mensagem seja processada
+      }
+    }
+    
   },
   {
     connection: redisConnection,
-    concurrency: 1, // Processa até 5 jobs simultaneamente
+    concurrency: 5, // Processa até 5 jobs simultaneamente
   }
 );
 
@@ -58,7 +68,15 @@ const whatsappWorker = new Worker(
 
 
     // Adquire lock para esse usuário
-    const releaseLock = await acquireUserLock(userId);
+    const hasLock = userLocks.add(userId, job.id);
+  
+    if(!hasLock){
+      // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 1s
+      // Isso mantém a mensagem na fila sem bloqueá-la para outros usuários
+      console.log(`[Inbound] Usuário ${userId} ocupado. Reagendando Job ${job.id}...`);
+      await job.moveToDelayed(Date.now() + 2000);
+      throw new Error('LOCK_ACQUIRED_BY_ANOTHER_JOB'); // Interrompe a execução atual
+    }
 
     try {
       await db.raw(
@@ -79,7 +97,7 @@ const whatsappWorker = new Worker(
 
       return { success: true};
     } catch (error) {
-     Logger.error(`❌ Erro ao processar mensagem ${message.id}:`, error);
+     Logger.error(`❌ Erro ao processar mensagem whatsapp${message.id}:`, error);
 
       await db.raw(
         `UPDATE whatsapp_messages 
@@ -87,10 +105,8 @@ const whatsappWorker = new Worker(
          WHERE id = ?`,
         ['failed', error.message, dbId]
       );
-
-      throw error; // BullMQ vai fazer retry automaticamente
     } finally {
-      releaseLock();
+      userLocks.remove(userId); // Libera o lock para esse usuário, permitindo que a próxima mensagem seja processada
     }
   },
   {
