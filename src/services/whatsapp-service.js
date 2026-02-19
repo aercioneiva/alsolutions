@@ -196,7 +196,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
-      sessionService.updateSession(idSession,{ updatedAt: new Date().toISOString().replace('T', ' ').replace('Z', '')});
+      sessionService.updateSessionLastMessage(idSession);
 
       if(progress >= 100 && (!clientSideActions || clientSideActions[0]?.type != 'chatwoot')){
          sessionService.deleteSession(idSession);

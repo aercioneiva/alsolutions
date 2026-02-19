@@ -80,6 +80,16 @@ module.exports = class SessiontRepository {
       return null;
    }
 
+   async updateSessionLastMessage(idSession) {
+      const affectedRows = await db('session').where({ id: idSession }).update({updated_at: db.raw('NOW()')});
+
+      if(affectedRows){
+         return affectedRows;
+      }
+      
+      return null;
+   }
+
    async delete(idSession) {
       const affectedRows = await db('session').where({id: idSession}).delete().limit(1);
 

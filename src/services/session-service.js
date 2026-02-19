@@ -80,3 +80,19 @@ exports.updateSession = async (idSession, session) => {
 
    return null;
 }
+
+exports.updateSessionLastMessage = async (idSession) => {
+   const sessionRepository = makeSession();
+
+   if(!idSession){
+      return null;
+   }
+
+   try {
+      return await sessionRepository.updateSessionLastMessage(idSession);
+   } catch (error) {
+      Logger.error(`[SERVICE-SESSION] Não atualizou a session: ${error}`);
+   }
+
+   return null;
+}
