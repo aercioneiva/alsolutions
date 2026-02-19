@@ -6,7 +6,7 @@
   "author": "Aércio F Neiva",
   "scripts": {
     "start": "npm-run-all -p server queue cron",
-    "server": "node src/server.js", 
+    "server": "node src/server.js",
     "dev": "nodemon src/server.js",
     "queue": "node src/queue.js",
     "cron": "node src/cron.js"
@@ -21,9 +21,10 @@
     "hpp": "^0.2.3",
     "ioredis": "^5.4.1",
     "knex": "^3.1.0",
+    "luxon": "^3.7.2",
+    "mysql2": "^3.6.5",
     "node-cron": "^3.0.3",
     "npm-run-all": "^4.1.5",
-    "mysql2": "^3.6.5",
     "pino": "^9.4.0",
     "xss-clean": "^0.1.4"
   },

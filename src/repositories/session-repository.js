@@ -86,7 +86,7 @@ module.exports = class SessiontRepository {
       return affectedRows;
    }
 
-   async deleteExpirationSession(contract, downtime) {
+   async deleteExpirationSession(contract, downtime) {      
       return await db('session')
          .where('contract', contract)
          .where('conversation', 0)

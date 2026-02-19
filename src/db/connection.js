@@ -7,8 +7,7 @@ const db = knex({
     port: process.env.MYSQL_PORT || 3306,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASS,
-    database: process.env.MYSQL_DATABASE,
-    timezone: 'Z'
+    database: process.env.MYSQL_DATABASE
   },
   pool: {
     min: 2,
@@ -30,6 +29,12 @@ db.client.pool.on('acquireSuccess', () => {
 db.client.pool.on('release', () => {
   console.log('♻️ Conexão liberada');
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  db.on('query', (queryData) => {
+    console.log('SQL:', queryData.sql, queryData.bindings);
+  });
+}
 
 module.exports = db;
 

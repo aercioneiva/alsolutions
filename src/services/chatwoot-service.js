@@ -326,6 +326,7 @@ async function _loadCompanyData(contract) {
       name: company.name,
       contract,
       id_whatsapp: company.id_whatsapp,
+      timezone: company.timezone,
       account: company.account,
       inbox: company.inbox,
       system: company.system,

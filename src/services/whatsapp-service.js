@@ -23,6 +23,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    let contactPhoneNumber;
    let contactName;
    let id_whatsapp;
+   let timezone;
    
 
    const cacheCompany = await Cache.get(contract);
@@ -38,6 +39,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          name: responseCompany.name,
          contract: contract,
          id_whatsapp: responseCompany.id_whatsapp, 
+         timezone: responseCompany.timezone,
          account: responseCompany.account,
          inbox: responseCompany.inbox,
          system: responseCompany.system,
@@ -52,13 +54,15 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       system = responseCompany.system;
       chatwoot = { account, inbox };
       id_whatsapp = responseCompany.id_whatsapp;
+      timezone = responseCompany.timezone;
    }else{
       const cp = JSON.parse(cacheCompany);
       account = cp.account;
       inbox = cp.inbox;
       system = cp.system;
       chatwoot = { account, inbox };
-      id_whatsapp = cp.id_whatsapp
+      id_whatsapp = cp.id_whatsapp;
+      timezone = cp.timezone;
    }
 
    contactPhoneNumber = contacts?.[0]?.wa_id || '';
