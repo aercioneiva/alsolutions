@@ -324,6 +324,8 @@ async function _loadCompanyData(contract) {
 
    const companyData = {
       contract,
+      name: company.name,
+      id_whatsapp: company.id_whatsapp,
       account: company.account,
       inbox: company.inbox,
       system: company.system,
