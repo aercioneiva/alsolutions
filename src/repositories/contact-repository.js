@@ -83,11 +83,11 @@ module.exports = class ContactRepository {
       }
    }
 
-   async updateLastMessage(contactPhoneNumber, lastMessage) {
+   async updateLastMessage(contactPhoneNumber) {
       try {
          const result = await db('contact')
             .where({number: contactPhoneNumber})
-            .update({last_message: lastMessage})
+            .update({last_message: db.raw('NOW()')})
             .limit(1);
       
          return result > 0;

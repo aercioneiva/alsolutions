@@ -57,11 +57,11 @@ exports.createContact = async (contact) => {
 
    return null;
 }
-exports.updateLastMessage = async (contactPhoneNumber, lastMessage) => {
+exports.updateLastMessage = async (contactPhoneNumber) => {
    const contactRepository = makeContact();
 
    try {
-      return await contactRepository.updateLastMessage(contactPhoneNumber, lastMessage);
+      return await contactRepository.updateLastMessage(contactPhoneNumber);
    } catch (error) {
       Logger.error(`[SERVICE-CONTACT] Erro ao atualizar contato:`,error);
    }
