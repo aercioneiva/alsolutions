@@ -6,7 +6,7 @@ const Logger = require('../libs/logger');
 
 exports.enviarMensagemZapMeta = async function(data){
    const token_zap = process.env.ZAP_TOKEN;
-   
+   console.log('Dados para envio:', data);
    if (!token_zap) {
       Logger.error('[WHATSAPP] ZAP_TOKEN not configured');
       return false;
