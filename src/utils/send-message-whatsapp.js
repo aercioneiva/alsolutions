@@ -20,7 +20,7 @@ exports.enviarMensagemZapMeta = async function(data){
    try {
       const response = await axios({
          method: "POST",
-         url: `${process.env.ZAP_URL}/238910019300032/messages`,
+         url: `${process.env.ZAP_URL}/${data.id_whatsapp}/messages`,
          headers: {
             Authorization: `Bearer ${token_zap}`,
             'Content-Type': 'application/json'
