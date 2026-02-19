@@ -12,7 +12,7 @@ const { inactivity } = require('./cron-jobs/inactivity');
 
 // Define um cron job que será executado a cada minuto
 cron.schedule('* * * * *', async () => {
-   Logger.info('Task executed every 1 minute:', new Date().toLocaleString());
+   Logger.info('Task executed every 1 minute:');
    inactivity();
 });
 

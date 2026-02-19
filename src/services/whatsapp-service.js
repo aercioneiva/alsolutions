@@ -135,7 +135,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
-      contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
+      contactService.updateLastMessage(contactPhoneNumber);
       
       return;
    }
@@ -264,7 +264,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
       
       if(conversationId){
-         await contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
+         await contactService.updateLastMessage(contactPhoneNumber);
          let formData = {type: 'content', file: '', content: '[SYSTEM] Cliente Solicitando Atendimento', fileName: ''};
 
          await enviarMensagemChatWoot({data: formData, account, conversationId});

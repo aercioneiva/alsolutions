@@ -1,3 +1,5 @@
+process.env.TZ = 'America/Sao_Paulo';
+
 const http = require('http');
 
 const app = require('./app');
