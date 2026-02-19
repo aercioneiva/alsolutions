@@ -5,7 +5,7 @@
   "main": "server.js",
   "author": "Aércio F Neiva",
   "scripts": {
-    "start": "npm-run-all -p server cron",
+    "start": "npm-run-all -p server queue cron",
     "server": "node src/server.js", 
     "dev": "nodemon src/server.js",
     "queue": "node src/queue.js",

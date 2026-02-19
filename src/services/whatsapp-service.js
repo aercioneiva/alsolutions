@@ -162,7 +162,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
       const { messages, clientSideActions } = resTypebot;
 
-      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract); 
+      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp); 
       
    }else{
 
@@ -224,6 +224,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
          //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
          if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
+            console.log('Enviando mensagem para o whatsapp:', {messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp});
             await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp});
          }
       }

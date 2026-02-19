@@ -10,7 +10,7 @@ exports.enviarMensagemZapMeta = async function(data){
       Logger.error('[WHATSAPP] ZAP_TOKEN not configured');
       return false;
    }
-   console.log('data', data);
+   
    if (!process.env.ZAP_URL) {
       Logger.error('[WHATSAPP] ZAP_URL not configured');
       return false;
