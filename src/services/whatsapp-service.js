@@ -135,7 +135,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
-      contactService.updateLastMessage(contactPhoneNumber, new Date());
+      contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
       
       return;
    }
@@ -196,7 +196,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
-      sessionService.updateSession(idSession,{ updatedAt: new Date()});
+      sessionService.updateSession(idSession,{ updatedAt: new Date().toISOString().replace('T', ' ').replace('Z', '')});
 
       if(progress >= 100 && (!clientSideActions || clientSideActions[0]?.type != 'chatwoot')){
          sessionService.deleteSession(idSession);
@@ -264,7 +264,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
       
       if(conversationId){
-         await contactService.updateLastMessage(contactPhoneNumber, new Date());
+         await contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
          let formData = {type: 'content', file: '', content: '[SYSTEM] Cliente Solicitando Atendimento', fileName: ''};
 
          await enviarMensagemChatWoot({data: formData, account, conversationId});

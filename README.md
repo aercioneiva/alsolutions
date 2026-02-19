@@ -2,7 +2,6 @@
 >(API)
 - [ ] implementar novo fluxo, sem typebot
 - [X] terminar fila de mensagem, aplicar lock
-- [ ] implementar timezone correto 
 - [X] tratar anexo malicioso vindo do zap 
 - [ ] rever template de nova conversa, esta fixo
 - [X] trocar o id do whatsapp para vir como parametro, hj ta fixo
