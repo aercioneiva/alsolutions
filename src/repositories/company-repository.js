@@ -12,6 +12,7 @@ module.exports = class CompanyRepository {
                id: rows[0].id,
                name: rows[0].name,
                contract: rows[0].contract,
+               id_whatsapp: rows[0].id_whatsapp,
                account: rows[0].account,
                inbox: rows[0].inbox,
                downtime: rows[0].downtime,
@@ -39,6 +40,7 @@ module.exports = class CompanyRepository {
             id: row.id,
             name: row.name,
             contract: row.contract,
+            id_whatsapp: row.id_whatsapp,
             account: row.account,
             inbox: row.inbox,
             downtime: row.downtime,
@@ -57,10 +59,11 @@ module.exports = class CompanyRepository {
 
    async create(company) {
       try {
-         const {contract, account, inbox, downtime, system, name } = company;
+         const {contract, account, inbox, downtime, system, name , id_whatsapp} = company;
 
          const [ id ] = await db.insert({
             name,
+            id_whatsapp,
             contract,
             account, 
             inbox, 

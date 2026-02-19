@@ -150,7 +150,7 @@ async function _processMessage(message, company, contract, customerPhoneNumber) 
 
    if (_hasAttachments(message.attachments)) {
       for (const file of message.attachments) {
-         const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
+         const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract, company.id_whatsapp);
          enviarMensagemZapMeta(whatsappFileData);
       }
    } else {
@@ -158,7 +158,8 @@ async function _processMessage(message, company, contract, customerPhoneNumber) 
          messaging_product: 'whatsapp',
          to: customerPhoneNumber,
          text: { body: `*${senderName}:*\n${message.content}` },
-         contract
+         contract,
+         id_whatsapp: company.id_whatsapp
       };
       enviarMensagemZapMeta(messageData);
    }
@@ -180,7 +181,7 @@ async function _handleMessageOutside24hWindow(message, company, messageContent, 
          }
       }
 
-      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise');
+      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise', company.id_whatsapp);
       enviarMensagemZapMeta(templateData);
       return;
    }
@@ -216,7 +217,8 @@ async function _handleConversationResolved(message, company, contract) {
             messaging_product: 'whatsapp',
             to: customerPhoneNumber,
             text: { body: `Chat encerrado!` },
-            contract
+            contract,
+            id_whatsapp: company.id_whatsapp
          };
          enviarMensagemZapMeta(data);
       }  
@@ -237,7 +239,8 @@ async function _handleConversationResolved(message, company, contract) {
                messaging_product: 'whatsapp',
                to: customerPhoneNumber,
                text: { body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `},
-               contract
+               contract,
+               id_whatsapp: company.id_whatsapp
             };
             enviarMensagemZapMeta(data2);
          }
@@ -389,11 +392,12 @@ async function _sendSystemMessage(account, conversationId, messageContent) {
 }
 
 
-function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
+function _createWhatsAppFileData(customerPhoneNumber, file, contract, id_whatsapp) {
    const baseData = {
       messaging_product: 'whatsapp',
       to: customerPhoneNumber,
-      contract
+      contract,
+      id_whatsapp
    };
 
    const fileType = file.file_type;

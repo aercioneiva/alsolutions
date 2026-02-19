@@ -1,9 +1,11 @@
 ## parte 1 
 >(API)
-- [ ] terminar fila de mensagem, aplicar lock
+- [ ] implementar novo fluxo, sem typebot
+- [X] terminar fila de mensagem, aplicar lock
 - [ ] implementar timezone correto 
 - [X] tratar anexo malicioso vindo do zap 
 - [ ] rever template de nova conversa, esta fixo
+- [ ] trocar o id do whatsapp para vir como parametro, hj ta fixo
 - [ ] ajustar a configuracao do webook da meta para receber o contrato do cliente ao inves de "ALSOLUTIONS"
 - [X] ao encerrar uma conversa, validar se é a mesma que o usuario esta em aberta para poder noficar corretamente
 - [X] implementar uma logica para mensagem ativa conversa
@@ -86,6 +88,7 @@ CREATE TABLE company(
     contract uuid NOT NULL,
     name VARCHAR(100) NOT NULL,
     contract uuid NOT NULL,
+    id_whatsapp VARCHAR(50) NOT NULL,
     account INT(5) NOT NULL,
     inbox INT(5) NOT NULL,
     downtime INT(3) NOT NULL,

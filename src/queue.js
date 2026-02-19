@@ -68,7 +68,7 @@ const whatsappWorker = new Worker(
     const hasLock = userLocks.add(userId, job.id);
   
     if(!hasLock){
-      // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 1s
+      // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 2s
       // Isso mantém a mensagem na fila sem bloqueá-la para outros usuários
       console.log(`[Inbound] Usuário ${userId} ocupado. Reagendando Job ${job.id}...`);
       await job.moveToDelayed(Date.now() + 2000);
