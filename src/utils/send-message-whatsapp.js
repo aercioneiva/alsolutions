@@ -6,12 +6,11 @@ const Logger = require('../libs/logger');
 
 exports.enviarMensagemZapMeta = async function(data){
    const token_zap = process.env.ZAP_TOKEN;
-   console.log('Dados para envio:', data);
    if (!token_zap) {
       Logger.error('[WHATSAPP] ZAP_TOKEN not configured');
       return false;
    }
-
+   console.log('data', data);
    if (!process.env.ZAP_URL) {
       Logger.error('[WHATSAPP] ZAP_URL not configured');
       return false;
@@ -31,8 +30,7 @@ exports.enviarMensagemZapMeta = async function(data){
 
       return true;
    } catch (error) {
-      Logger.error('[WHATSAPP] Error sending message to Meta', error);
-      console.log(error)
+      Logger.error('[WHATSAPP] Error sending message to Meta', error.status);
    }
 
    return false;
