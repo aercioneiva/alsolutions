@@ -23,7 +23,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    let contactPhoneNumber;
    let contactName;
    let id_whatsapp;
-   let timezone;
+   let version_whatsapp;
    
 
    const cacheCompany = await Cache.get(contract);
@@ -39,7 +39,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          name: responseCompany.name,
          contract: contract,
          id_whatsapp: responseCompany.id_whatsapp, 
-         timezone: responseCompany.timezone,
+         version_whatsapp: responseCompany.version_whatsapp,
          account: responseCompany.account,
          inbox: responseCompany.inbox,
          system: responseCompany.system,
@@ -54,7 +54,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       system = responseCompany.system;
       chatwoot = { account, inbox };
       id_whatsapp = responseCompany.id_whatsapp;
-      timezone = responseCompany.timezone;
+      version_whatsapp = responseCompany.version_whatsapp;
    }else{
       const cp = JSON.parse(cacheCompany);
       account = cp.account;
@@ -62,7 +62,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       system = cp.system;
       chatwoot = { account, inbox };
       id_whatsapp = cp.id_whatsapp;
-      timezone = cp.timezone;
+      version_whatsapp = cp.version_whatsapp;
    }
 
    contactPhoneNumber = contacts?.[0]?.wa_id || '';
@@ -166,12 +166,12 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
       const { messages, clientSideActions } = resTypebot;
 
-      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp); 
+      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp); 
       
    }else{
 
       if(message?.type !== 'text' && message?.type !== 'button'){
-         await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: 'Mensagem Inválida!'}, contract: contract, id_whatsapp: id_whatsapp});
+         await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: 'Mensagem Inválida!'}, contract: contract, id_whatsapp: id_whatsapp, version_whatsapp: version_whatsapp});
          return; 
       }
 
@@ -193,7 +193,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
       const { messages, clientSideActions, progress} = resChatTypebot;
 
-      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp);  
+      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
       sessionService.updateSessionLastMessage(idSession);
@@ -206,7 +206,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    return;
 }
 
-async function _processMessageTypeBot (messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp){
+async function _processMessageTypeBot (messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp){
    const abrirChatWoot = (clientSideActions && clientSideActions[0]?.type == 'chatwoot') ? true: false;
 
    let ultimaMensagem = '';
@@ -228,7 +228,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
          //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
          if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
-            await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp});
+            await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp, version_whatsapp: version_whatsapp});
          }
       }
 
@@ -239,7 +239,8 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
                filename: message.content.url.split('/')[5] || 'Boleto.pdf'
             },
             contract: contract,
-            id_whatsapp: id_whatsapp
+            id_whatsapp: id_whatsapp,
+            version_whatsapp: version_whatsapp
          };
 
          await enviarMensagemZapMeta(data);

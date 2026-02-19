@@ -181,7 +181,7 @@ async function _handleMessageOutside24hWindow(message, company, messageContent, 
          }
       }
 
-      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise', company.id_whatsapp);
+      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise', company.id_whatsapp, company.version_whatsapp);
       enviarMensagemZapMeta(templateData);
       return;
    }
@@ -326,7 +326,7 @@ async function _loadCompanyData(contract) {
       name: company.name,
       contract,
       id_whatsapp: company.id_whatsapp,
-      timezone: company.timezone,
+      version_whatsapp: company.version_whatsapp,
       account: company.account,
       inbox: company.inbox,
       system: company.system,

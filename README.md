@@ -1,5 +1,6 @@
 ## parte 1 
 >(API)
+- [ ] implementar linter no codigo
 - [ ] implementar novo fluxo, sem typebot
 - [X] terminar fila de mensagem, aplicar lock
 - [X] tratar anexo malicioso vindo do zap 
