@@ -5,8 +5,7 @@
 - [ ] implementar timezone correto 
 - [X] tratar anexo malicioso vindo do zap 
 - [ ] rever template de nova conversa, esta fixo
-- [ ] trocar o id do whatsapp para vir como parametro, hj ta fixo
-- [ ] ajustar a configuracao do webook da meta para receber o contrato do cliente ao inves de "ALSOLUTIONS"
+- [X] trocar o id do whatsapp para vir como parametro, hj ta fixo
 - [X] ao encerrar uma conversa, validar se é a mesma que o usuario esta em aberta para poder noficar corretamente
 - [X] implementar uma logica para mensagem ativa conversa
 - [x] implementar a logica de cache para pegar os dados da empresa, aplicar padrão adpter

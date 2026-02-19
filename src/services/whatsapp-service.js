@@ -131,7 +131,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
-      contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
+      contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString());
       
       return;
    }
@@ -192,7 +192,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
-      sessionService.updateSession(idSession,{ updatedAt: new Date().toISOString().replace('T', ' ').replace('Z', '')});
+      sessionService.updateSession(idSession,{ updatedAt: new Date().toISOString()});
 
       if(progress >= 100 && (!clientSideActions || clientSideActions[0]?.type != 'chatwoot')){
          sessionService.deleteSession(idSession);
@@ -224,7 +224,6 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
          //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
          if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
-            console.log('Enviando mensagem para o whatsapp:', {messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp});
             await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp});
          }
       }
@@ -261,7 +260,7 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
       
       if(conversationId){
-         await contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString().replace('T', ' ').replace('Z', ''));
+         await contactService.updateLastMessage(contactPhoneNumber, new Date().toISOString());
          let formData = {type: 'content', file: '', content: '[SYSTEM] Cliente Solicitando Atendimento', fileName: ''};
 
          await enviarMensagemChatWoot({data: formData, account, conversationId});
