@@ -1,6 +1,5 @@
 const companyService  = require('./company-service');
 const { ZapQueue } = require('../libs/queue');
-const { version } = require('react');
 
 async function _processarMessage(message,numbers, company) {
    const numbersSend = numbers.split(',');
