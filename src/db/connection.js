@@ -19,15 +19,15 @@ const db = knex({
 });
 
 db.client.pool.on('acquireRequest', () => {
-  console.log('🔄 Pedindo conexão...');
+  //console.log('🔄 Pedindo conexão...');
 });
 
 db.client.pool.on('acquireSuccess', () => {
-  console.log('✅ Conexão adquirida');
+  //console.log('✅ Conexão adquirida');
 });
 
 db.client.pool.on('release', () => {
-  console.log('♻️ Conexão liberada');
+  //console.log('♻️ Conexão liberada');
 });
 
 if (process.env.NODE_ENV !== 'production') {

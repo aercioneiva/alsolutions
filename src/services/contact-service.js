@@ -50,7 +50,6 @@ exports.createContact = async (contact) => {
    
       return oldContact.id;
    } catch (error) {
-      console.log(error);
       Logger.error(`[SERVICE-CONTACT] Erro ao cadastrar contato:`);
    }
    

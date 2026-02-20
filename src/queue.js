@@ -25,7 +25,6 @@ const chatWootWorker = new Worker(
       if(!hasLock){
         // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 1s
         // Isso mantém a mensagem na fila sem bloqueá-la para outra conversas
-        console.log(`[Inbound] Usuário ${messsage.conversation.id} ocupado. Reagendando Job ${job.id}...`);
         await job.moveToDelayed(Date.now() + 2000);
         throw new Error('LOCK_ACQUIRED_BY_ANOTHER_JOB'); // Interrompe a execução atual
       }
@@ -49,7 +48,6 @@ const chatWootWorker = new Worker(
 );
 
 chatWootWorker.on('failed', (job, err) => {
-  console.log(err);
   Logger.error(`Job ${job.id} falhou:`);
 });
 
@@ -70,7 +68,6 @@ const whatsappWorker = new Worker(
     if(!hasLock){
       // Se não conseguiu o lock, move o job para "delayed" para tentar novamente em 2s
       // Isso mantém a mensagem na fila sem bloqueá-la para outros usuários
-      console.log(`[Inbound] Usuário ${userId} ocupado. Reagendando Job ${job.id}...`);
       await job.moveToDelayed(Date.now() + 2000);
       throw new Error('LOCK_ACQUIRED_BY_ANOTHER_JOB'); // Interrompe a execução atual
     }
