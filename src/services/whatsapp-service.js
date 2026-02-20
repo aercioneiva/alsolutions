@@ -11,8 +11,11 @@ const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
 
 
 
+exports.sendMessageWhatsapp = async(data) => {
+   await enviarMensagemZapMeta(data);
+}
+
 exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
-   
    let session;
    let messagem = '';
    let conversationId = 0;

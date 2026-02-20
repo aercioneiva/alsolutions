@@ -1,22 +1,11 @@
-const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
+const { sendMessageWhatsapp } = require('../services/whatsapp-service');
 const Logger = require('../libs/logger');
 
 module.exports = {
-   key: 'EnviarMensagemZap',
+   key: 'EnviarMensagemWhatsapp',
    async handle(data, job){
       try {
-         Logger.info('Processing WhatsApp message job');
-
-         let result = false;
-         
-         result = await enviarMensagemZapMeta(data);
-        
-         if(result) {
-            Logger.info('WhatsApp message sent successfully');
-         } else {
-            Logger.error('WhatsApp message failed to send',result);
-         }
-         return result;
+         await sendMessageWhatsapp(data);
       } catch (error) {
          Logger.error('Error processing WhatsApp message job');
          throw error;

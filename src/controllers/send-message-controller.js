@@ -7,7 +7,7 @@ exports.sendMessage = async (req, res) => {
    const sent = await sendMessageService.sendMessage(contract, message, numbers);
 
    if(!sent){
-      return res.status(400).send();
+      return res.status(400).send('{"status": false}');
    }
 
    return res.status(201).send('{"status": true}');
