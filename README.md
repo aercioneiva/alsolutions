@@ -88,6 +88,7 @@ CREATE TABLE company(
     name VARCHAR(100) NOT NULL,
     contract uuid NOT NULL,
     id_whatsapp VARCHAR(50) NOT NULL,
+    version_whatsapp VARCHAR(10) NOT NULL,
     account INT(5) NOT NULL,
     inbox INT(5) NOT NULL,
     downtime INT(3) NOT NULL,

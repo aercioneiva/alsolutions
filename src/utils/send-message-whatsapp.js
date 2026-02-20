@@ -30,7 +30,7 @@ exports.enviarMensagemZapMeta = async function(data){
 
       return true;
    } catch (error) {
-      Logger.error('[WHATSAPP] Error sending message to Meta', error.status);
+      Logger.error('[WHATSAPP] Error sending message to Meta');
    }
 
    return false;
