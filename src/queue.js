@@ -35,7 +35,7 @@ const chatWootWorker = new Worker(
     try {
       await HandleMessageChatWoot.handle(job.data, job);
     } catch (error) {
-      Logger.error(`❌ Erro ao processar mensagem chatwoot`, error);
+      Logger.error(`❌ Erro ao processar mensagem chatwoot`);
     } finally {
       if(hasLock){
         userLocks.remove(messsage.conversation.id); // Libera o lock para essa conversa, permitindo que a próxima mensagem seja processada
@@ -50,11 +50,11 @@ const chatWootWorker = new Worker(
 
 chatWootWorker.on('failed', (job, err) => {
   console.log(err);
-  Logger.error(`Job ${job.id} falhou:`, err.message);
+  Logger.error(`Job ${job.id} falhou:`);
 });
 
 chatWootWorker.on('error', (err) => {
-  Logger.error('Erro no worker ChatWoot:', err);
+  Logger.error('Erro no worker ChatWoot:');
 });
 
 const whatsappWorker = new Worker(
@@ -93,7 +93,7 @@ const whatsappWorker = new Worker(
       );
 
     } catch (error) {
-     Logger.error(`❌ Erro ao processar mensagem whatsapp${message.id}:`, error);
+     Logger.error(`❌ Erro ao processar mensagem whatsapp${message.id}:`);
 
       await db.raw(
         `UPDATE whatsapp_messages 
@@ -115,11 +115,11 @@ const whatsappWorker = new Worker(
 );
 
 whatsappWorker.on('failed', (job, err) => {
-  Logger.error(`Job ${job.id} falhou após ${job.attemptsMade} tentativas:`, err.message);
+  Logger.error(`Job ${job.id} falhou após ${job.attemptsMade} tentativas:`);
 });
 
 whatsappWorker.on('error', (err) => {
-  Logger.error('Erro no worker:', err);
+  Logger.error('Erro no worker:');
 });
 
 console.log('🚀 Worker iniciado e aguardando mensagens...');

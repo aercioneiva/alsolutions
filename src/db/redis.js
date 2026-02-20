@@ -18,7 +18,7 @@ const redisOptions = {
 const client = new Redis(redisOptions);
 
 client.on('error', function(error){
-   Logger.error('Redis connection error:', error);
+   Logger.error('Redis connection error:');
 });
 
 client.on('connect', function(){
@@ -39,7 +39,7 @@ client.on('reconnecting', function(){
 
 // Test connection on startup
 client.connect().catch(error => {
-   Logger.error('Failed to connect to Redis:', error);
+   Logger.error('Failed to connect to Redis:');
 });
 
 module.exports = client;

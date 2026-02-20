@@ -51,7 +51,7 @@ exports.createContact = async (contact) => {
       return oldContact.id;
    } catch (error) {
       console.log(error);
-      Logger.error(`[SERVICE-CONTACT] Erro ao cadastrar contato:`,error);
+      Logger.error(`[SERVICE-CONTACT] Erro ao cadastrar contato:`);
    }
    
 
@@ -63,7 +63,7 @@ exports.updateLastMessage = async (contactPhoneNumber) => {
    try {
       return await contactRepository.updateLastMessage(contactPhoneNumber);
    } catch (error) {
-      Logger.error(`[SERVICE-CONTACT] Erro ao atualizar contato:`,error);
+      Logger.error(`[SERVICE-CONTACT] Erro ao atualizar contato:`);
    }
 
    return null;

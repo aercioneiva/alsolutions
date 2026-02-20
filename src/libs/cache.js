@@ -60,7 +60,7 @@ async function exists(key){
       const result = await redis.exists(key);
       return result === 1;
    } catch (error) {
-      Logger.error('Error checking cache existence:', error);
+      Logger.error('Error checking cache existence:');
       return false;
    }
 }
@@ -76,7 +76,7 @@ async function expire(key, ttl){
       const result = await redis.expire(key, ttl);
       return result === 1;
    } catch (error) {
-      Logger.error('Error setting cache expiration:', error);
+      Logger.error('Error setting cache expiration:');
       return false;
    }
 }
