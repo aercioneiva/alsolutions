@@ -1,10 +1,11 @@
 const dotenv = require('dotenv');
 dotenv.config();
-const { Worker, tryCatch } = require('bullmq');
+const { Worker } = require('bullmq');
 const redisConnection = require('./db/redis');
 const db = require('./db/connection.js');
 const HandleMessageWhatsapp = require('./queue-jobs/handle-message-whatsapp');
 const HandleMessageChatWoot = require('./queue-jobs/handle-message-chatwoot');
+const enviarMensagemWhatsapp = require('./queue-jobs/enviar-mensagem-whatsapp');
 const Lock = require('./utils/lock');
 const Logger = require('./libs/logger');
 
@@ -54,6 +55,22 @@ chatWootWorker.on('failed', (job, err) => {
 chatWootWorker.on('error', (err) => {
   Logger.error('Erro no worker ChatWoot:');
 });
+
+const sendWhatsappWorker = new Worker(
+  'EnviarMensagemWhatsapp',
+  async (job) => {
+    try {
+      await enviarMensagemWhatsapp.handle(job.data, job);
+    } catch (error) {}
+  },
+  {
+    connection: redisConnection,
+    concurrency: 10, // Processa até 10 jobs simultaneamente
+    limiter: {
+      max: 100, // Máximo 100 jobs
+    },
+  }
+);
 
 const whatsappWorker = new Worker(
   'ProcessarMensagemWhatsapp',
@@ -125,6 +142,7 @@ process.on('SIGTERM', async () => {
   console.log('SIGTERM recebido, encerrando worker...');
   await whatsappWorker.close();
   await chatWootWorker.close();
+  await sendWhatsappWorker.close();
   process.exit(0);
 });
 
@@ -132,5 +150,6 @@ process.on('SIGINT', async () => {
   console.log('SIGINT recebido, encerrando worker...');
   await whatsappWorker.close();
   await chatWootWorker.close();
+  await sendWhatsappWorker.close();
   process.exit(0);
 });
