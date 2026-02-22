@@ -10,7 +10,7 @@ const Logger = require('./logger');
 async function set(key, value, ttl = null){
    try {
       if (ttl) {
-         await redis.setex(key, ttl, JSON.stringify(value));
+         await redis.set(key, JSON.stringify(value), 'EX', ttl);
       } else {
          await redis.set(key, JSON.stringify(value));
       }

@@ -38,7 +38,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
         return; 
       }
 
-      Cache.set(contract,JSON.stringify({
+      Cache.set(contract,{
          name: responseCompany.name,
          contract: contract,
          id_whatsapp: responseCompany.id_whatsapp, 
@@ -50,7 +50,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          host: responseCompany.host,
          fluxo: responseCompany.fluxo,
          topico: responseCompany.topico
-      }));
+      });
 
       account = responseCompany.account;
       inbox = responseCompany.inbox;
@@ -59,13 +59,12 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       id_whatsapp = responseCompany.id_whatsapp;
       version_whatsapp = responseCompany.version_whatsapp;
    }else{
-      const cp = JSON.parse(cacheCompany);
-      account = cp.account;
-      inbox = cp.inbox;
-      system = cp.system;
+      account = cacheCompany.account;
+      inbox = cacheCompany.inbox;
+      system = cacheCompany.system;
       chatwoot = { account, inbox };
-      id_whatsapp = cp.id_whatsapp;
-      version_whatsapp = cp.version_whatsapp;
+      id_whatsapp = cacheCompany.id_whatsapp;
+      version_whatsapp = cacheCompany.version_whatsapp;
    }
 
    contactPhoneNumber = contacts?.[0]?.wa_id || '';

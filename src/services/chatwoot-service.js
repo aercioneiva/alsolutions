@@ -316,7 +316,7 @@ async function _loadCompanyData(contract) {
    const cachedCompany = await Cache.get(contract);
 
    if (cachedCompany) {
-      return JSON.parse(cachedCompany);
+      return cachedCompany;
    }
 
    const company = await companyService.getCompany(contract);
@@ -339,7 +339,7 @@ async function _loadCompanyData(contract) {
       topico: company.topico
    };
 
-   Cache.set(contract, JSON.stringify(companyData));
+   Cache.set(contract, companyData);
    return companyData;
 }
 
