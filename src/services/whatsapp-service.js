@@ -172,13 +172,14 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       //atualiza a data da da ultima mensagem enviada pelo usuario
       sessionService.updateSessionLastMessage(idSession);
 
-      if(resFlow.finalizado == true){
+      if(resFlow.finalizado == true && resFlow.abrir_chamado == false){
          sessionService.deleteSession(idSession);
       }
    }
 
    return;
 }
+
 async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp){
    const abrirChatWoot = flow.abrir_chamado || false;
 
