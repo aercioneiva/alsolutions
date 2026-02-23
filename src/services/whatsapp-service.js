@@ -4,6 +4,7 @@ const sessionService = require('./session-service');
 const companyService = require('./company-service');
 const typebotService = require('./typebot-service');
 const chatwootService = require('./chatwoot-service');
+const flowService = require('./flow-service');
 const contactService = require('./contact-service');
 const { getFileWhatsapp } = require('../utils/get-file-whatsapp');
 const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
@@ -43,6 +44,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          contract: contract,
          id_whatsapp: responseCompany.id_whatsapp, 
          version_whatsapp: responseCompany.version_whatsapp,
+         flow: responseCompany.flow,
          account: responseCompany.account,
          inbox: responseCompany.inbox,
          system: responseCompany.system,
@@ -145,100 +147,63 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    //se nao esta em conversa, verifica se ja esta em um fluxo typebot.
    // se nao tem sessao, inicia com o typebot, caso contrario da continuida no fluxo do typebot
    if(!session){
-      const data = {
-         message: messagem,
-         prefilledVariables: {
-            cliente_telefone: `${contactPhoneNumber}`,
-            cliente_codigo: contactName,
-            contract: contract
-         }
-      };
+      const resFlow = await flowService.startFlow({contract: contract, contactWAID: contactPhoneNumber});
       
-      const resTypebot = await typebotService.startTypeBot(data);
-
-      if(!resTypebot){
+      if(!resFlow){
          return;
       }
       
-      idSession = await sessionService.createSession({contract: contract, number: contactPhoneNumber, session: resTypebot.sessionId});
+      idSession = await sessionService.createSession({contract: contract, number: contactPhoneNumber, session: resFlow.id});
 
       if(!idSession){
          return;
       }
 
-      const { messages, clientSideActions } = resTypebot;
-
-      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp); 
-      
+      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp);
    }else{
+      const resFlow =  await flowService.sendMessageFlow({contract, session: session, message: messagem});
 
-      if(message?.type !== 'text' && message?.type !== 'button'){
-         await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: 'Mensagem Inválida!'}, contract: contract, id_whatsapp: id_whatsapp, version_whatsapp: version_whatsapp});
-         return; 
-      }
-
-      let mensageSend = messagem;
-      
-      if(mensageSend == 'nao' || mensageSend == 'não' || mensageSend == 'Nao'){
-         mensageSend = 'Não';
-      }else if(mensageSend == 'sim'){
-         mensageSend = 'Sim';
-      }
-
-      const data = JSON.stringify({ "message": mensageSend });
-
-      const resChatTypebot =  await typebotService.sendMessageTypeBot(data, session);
-
-      if(!resChatTypebot){
+      if(!resFlow){
          return;
       }
 
-      const { messages, clientSideActions, progress} = resChatTypebot;
-
-      await _processMessageTypeBot(messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp);  
+      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
       sessionService.updateSessionLastMessage(idSession);
 
-      if(progress >= 100 && (!clientSideActions || clientSideActions[0]?.type != 'chatwoot')){
+      if(resFlow.finalizado == true){
          sessionService.deleteSession(idSession);
       }
    }
 
    return;
 }
+async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp){
+   const abrirChatWoot = flow.abrir_chamado || false;
 
-async function _processMessageTypeBot (messages, clientSideActions, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp){
-   const abrirChatWoot = (clientSideActions && clientSideActions[0]?.type == 'chatwoot') ? true: false;
+   for(let i = 0; i < flow.mensagens.length; i++){
+      const message = flow.mensagens[i];
 
-   let ultimaMensagem = '';
-
-   for(let i = 0; i < messages.length; i++){
-      const message = messages[i];
-      if (message.type == 'text') {
-         let formattedText = '';
-
-         for (const richText of message.content.richText) {
-         for (const element of richText.children) {
-            formattedText += _applyFormatting(element);
-         }
-         formattedText += '\n';
-         }
-         formattedText = formattedText.replace(/\*\*/g, '').replace(/__/, '').replace(/~~/, '').replace(/\n$/, '');
-
-         ultimaMensagem = formattedText;
-
-         //se nao abrir conversa com o chatwoot, ou abrir e for a ultima mensagem, não envia pq é o nome do cliente para abrir o chamado
-         if(!abrirChatWoot || (abrirChatWoot && messages[i+1]?.type)){
-            await enviarMensagemZapMeta({messaging_product: 'whatsapp', to: contactPhoneNumber, text: {body: formattedText}, contract:contract, id_whatsapp: id_whatsapp, version_whatsapp: version_whatsapp});
-         }
+      if(message.tipo == 'text'){
+         await enviarMensagemZapMeta(
+            {
+               messaging_product: 'whatsapp', 
+               to: contactPhoneNumber, 
+               text: {
+                  body:  message.mensagem
+               }, 
+               contract:contract, 
+               id_whatsapp: id_whatsapp, 
+               version_whatsapp: version_whatsapp
+            }
+         );
       }
 
-
-      if(message.type == 'embed'){
+      if(message.tipo == 'embed'){
          const data = { messaging_product: 'whatsapp', to: contactPhoneNumber, type: "document",  document: {
-               link: message.content.url,
-               filename: message.content.url.split('/')[5] || 'Boleto.pdf'
+               link: message.mensagem,
+               filename: message.mensagem.split('/')[5] || 'Boleto.pdf'
             },
             contract: contract,
             id_whatsapp: id_whatsapp,
@@ -247,11 +212,6 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
 
          await enviarMensagemZapMeta(data);
       }
-
-      await waitIfExists(clientSideActions, message.id);
-
-      //não foi tratado os casos abaixo, pq a ideia não enviar nada alem de boletos atraves do typebot
-      //message.type == 'image' || 'video' || 'audio'
    }
 
    if(abrirChatWoot){
@@ -259,10 +219,10 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
       const inbox = chatwoot.inbox;
       const customAttributes = { 
          number: contactPhoneNumber, 
-         codigo_cliente: ultimaMensagem.split('|')[1],
-         nome_cliente: ultimaMensagem.split('|')[0]
+         codigo_cliente: 489,
+         nome_cliente: 'Aercio Bom Pagador'
       };
-      const name = ultimaMensagem.split('|')[2];//pegar o nome do typetbot
+      const name = contactPhoneNumber;
       const conversationId = await chatwootService.startChatwoot(account, inbox, name, customAttributes);
 
       
@@ -281,47 +241,6 @@ async function _processMessageTypeBot (messages, clientSideActions, contactPhone
    }
 }
 
-function _applyFormatting(element) {
-   let text = '';
-
-   if (element.text) {
-      text += element.text;
-   }
-
-   if (
-      element.children &&
-      (element.type == 'p' ||
-         element.type == 'a' ||
-         element.type == 'inline-variable' ||
-         element.type == 'variable')
-   ) {
-      for (const child of element.children) {
-         text += _applyFormatting(child);
-      }
-   }
-
-   let formats = '';
-
-   if (element.bold) {
-      formats += '*';
-   }
-
-   if (element.italic) {
-      formats += '_';
-   }
-
-   if (element.underline) {
-      formats += '~';
-   }
-
-   let formattedText = `${formats}${text}${formats.split('').reverse().join('')}`;
-
-   if (element.url) {
-      formattedText = element.children[0]?.text ? `[${formattedText}]\n(${element.url})` : `${element.url}`;
-   }
-
-   return formattedText;
-}
 
 async function waitIfExists(clientSideActions, bubbleId) {
    if(!clientSideActions || !Array.isArray(clientSideActions)) {

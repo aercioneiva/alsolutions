@@ -330,6 +330,7 @@ async function _loadCompanyData(contract) {
       contract,
       id_whatsapp: company.id_whatsapp,
       version_whatsapp: company.version_whatsapp,
+      flow: company.flow,
       account: company.account,
       inbox: company.inbox,
       system: company.system,

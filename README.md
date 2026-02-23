@@ -78,7 +78,6 @@ CREATE TABLE whatsapp_messages (
   error_message TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   processed_at DATETIME NULL,
-  
   INDEX idx_user_status (user_id, status, created_at),
   INDEX idx_status_created (status, created_at),
   INDEX idx_phone (phone_number)
@@ -91,6 +90,7 @@ CREATE TABLE company(
     contract uuid NOT NULL,
     id_whatsapp VARCHAR(50) NOT NULL,
     version_whatsapp VARCHAR(10) NOT NULL,
+    flow VARCHAR(50) NOT NULL,
     account INT(5) NOT NULL,
     inbox INT(5) NOT NULL,
     downtime INT(3) NOT NULL,
