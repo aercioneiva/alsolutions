@@ -38,17 +38,8 @@ const fluxoAtendimentoRBX = {
           };
         }
 
-        // Usuário enviou o documento
         const documento = mensagem.trim();
         
-        // if (!validarCPFCNPJ(documento)) {
-        //   return {
-        //     mensagem: 'CPF/CNPJ inválido. Por favor, informe um documento válido (11 ou 14 dígitos):',
-        //     aguardarResposta: true
-        //   };
-        // }
-
-        // Armazena o documento
         dados.documento = documento;
         
         return {
@@ -181,7 +172,8 @@ const fluxoAtendimentoRBX = {
               mensagem: 'Certo, vou transferir você para o atendimento humano!',
               tipo: 'text',
               abrirChamado: true,
-              finalizar: true
+              finalizar: true,
+              cliente: { codigo: dados.cliente.codigo, nome: dados.cliente.nome }
             };
         } else if (opcao == 4) {
           return {

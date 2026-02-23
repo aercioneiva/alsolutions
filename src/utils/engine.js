@@ -29,7 +29,10 @@ class FlowEngine {
     if(!sessao) {
       return {
         mensagens: [{mensagem: 'Sessão não encontrada. Inicie um novo atendimento.', tipo: 'text'}],
-        finalizado: true
+        finalizado: true,
+        aguardandoResposta: false,
+        abrir_chamado: false,
+        cliente: null
       };
     }
 
@@ -59,7 +62,10 @@ class FlowEngine {
     if(!sessao) {
       return {
         mensagens: [{mensagem: 'Sessão não encontrada. Inicie um novo atendimento.', tipo: 'text'}],
-        finalizado: true
+        finalizado: true,
+        aguardandoResposta: false,
+        abrir_chamado: false,
+        cliente: null
       };
     }
     
@@ -68,7 +74,10 @@ class FlowEngine {
     if (!step) {
       return {
         mensagens: [..._mensagensAcumuladas, {mensagem: 'Step não encontrado. Encerrando atendimento.', tipo: 'text'}],
-        finalizado: true
+        finalizado: true,
+        aguardandoResposta: false,
+        abrir_chamado: false,
+        cliente: null
       };
     }
 
@@ -90,7 +99,9 @@ class FlowEngine {
       return {
         mensagens: _mensagensAcumuladas,
         finalizado: true,
-        abrir_chamado: resultado.abrirChamado || false
+        aguardandoResposta: false,
+        abrir_chamado: resultado.abrirChamado || false,
+        cliente: resultado.cliente || null
       };
     }
 
@@ -121,7 +132,9 @@ class FlowEngine {
       id: usuarioId,
       mensagens: _mensagensAcumuladas,
       finalizado: false,
-      aguardandoResposta: resultado.aguardarResposta
+      aguardandoResposta: resultado.aguardarResposta,
+      abrir_chamado: false,
+      cliente: null
     };
   }
 

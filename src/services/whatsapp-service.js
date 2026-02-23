@@ -219,8 +219,8 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
       const inbox = chatwoot.inbox;
       const customAttributes = { 
          number: contactPhoneNumber, 
-         codigo_cliente: 489,
-         nome_cliente: 'Aercio Bom Pagador'
+         codigo_cliente: flow.cliente.codigo,
+         nome_cliente: flow.cliente.nome
       };
       const name = contactPhoneNumber;
       const conversationId = await chatwootService.startChatwoot(account, inbox, name, customAttributes);
