@@ -6,15 +6,15 @@ class FlowEngine {
     this.fluxo = fluxo;
   }
 
-  async iniciarFluxo(company, usuarioId, contract) {
+  async iniciarFluxo(company, usuarioId) {
     
     const id = uuidv4();
     await Cache.set(id,{
       id: id,
-      contract: contract,
+      contract: company.contract,
       fluxoAtual: this.fluxo.nome,
       stepAtual: this.fluxo.stepInicial,
-      dados: {contract, usuarioId, company},
+      dados: {contract: company.contract, usuarioId, company},
       historico: [],
     },60 * 60 * 24);
 
