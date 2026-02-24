@@ -345,6 +345,7 @@ async function _loadCompanyData(contract) {
       flow: company.flow,
       account: company.account,
       inbox: company.inbox,
+      downtime: company.downtime,
       system: company.system,
       key_integration: company.key_integration,
       rbx_account: company.rbx_account,

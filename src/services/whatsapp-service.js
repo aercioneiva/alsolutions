@@ -25,6 +25,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    let chatwoot;
    let contactPhoneNumber;
    let contactName;
+   let company;
    const whatsapp = {
       id: '',
       version: '',
@@ -40,6 +41,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       if(!responseCompany){
         return; 
       }
+      company = responseCompany;
 
       Cache.set(contract,{
          name: responseCompany.name,
@@ -50,6 +52,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          flow: responseCompany.flow,
          account: responseCompany.account,
          inbox: responseCompany.inbox,
+         downtime: responseCompany.downtime,
          system: responseCompany.system,
          key_integration: responseCompany.key_integration,
          rbx_account: responseCompany.rbx_account,
@@ -75,6 +78,8 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       whatsapp.id = cacheCompany.id_whatsapp;
       whatsapp.version = cacheCompany.version_whatsapp;
       whatsapp.token = cacheCompany.token_whatsapp;
+
+      company = cacheCompany;
    }
 
    contactPhoneNumber = contacts?.[0]?.wa_id || '';
@@ -155,7 +160,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    //se nao esta em conversa, verifica se ja esta em um fluxo.
    // se nao tem sessao, inicia com o fluxo, caso contrario da continuida no fluxo
    if(!session){
-      const resFlow = await flowService.startFlow({contract: contract, contactWAID: contactPhoneNumber});
+      const resFlow = await flowService.startFlow(company, contactPhoneNumber);
       
       if(!resFlow){
          return;
@@ -169,7 +174,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
 
       await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp);
    }else{
-      const resFlow =  await flowService.sendMessageFlow({contract, session: session, message: messagem});
+      const resFlow =  await flowService.sendMessageFlow(company, {session: session, message: messagem});
 
       if(!resFlow){
          return;
