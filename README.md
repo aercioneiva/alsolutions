@@ -1,12 +1,13 @@
 ## parte 1 
 >(API)
 - [ ] implementar linter no codigo
-- [ ] implementar novo fluxo, sem typebot
+- [X] implementar novo fluxo, sem typebot
 - [X] terminar fila de mensagem, aplicar lock
 - [X] tratar anexo malicioso vindo do zap 
 - [ ] rever template de nova conversa, esta fixo
 - [ ] montar logica de template para envio de mensagens avulsas
 - [ ] montar logica de template para envio de notificacoes
+- [ ] implementar fechamento do atendimento ao resolver conversa no chatwoot
 - [X] trocar o id do whatsapp para vir como parametro, hj ta fixo
 - [X] ao encerrar uma conversa, validar se é a mesma que o usuario esta em aberta para poder noficar corretamente
 - [X] implementar uma logica para mensagem ativa conversa

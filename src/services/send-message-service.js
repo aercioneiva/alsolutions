@@ -13,7 +13,15 @@ async function _processarMessage(message,numbers, company) {
 }
 
 async function _sendMessage(message,number, company) {
-   const data = { messaging_product: 'whatsapp', to: number, text: {body: message}, contract: company.contract, id_whatsapp: company.id_whatsapp, version_whatsapp: company.version_whatsapp };
+   const data = { 
+      messaging_product: 'whatsapp', 
+      to: number, 
+      text: {body: message}, 
+      contract: company.contract, 
+      id_whatsapp: company.id_whatsapp, 
+      version_whatsapp: company.version_whatsapp,
+      token_whatsapp: company.token_whatsapp
+   };
    ZapQueue.add('EnviarMensagemWhatsapp',data);
 }
 

@@ -92,3 +92,31 @@ exports.gerarPesquisaSatisfacao = async (company, ticket) => {
     }
     return null;
 }
+
+exports.encerrarAtendimento = async (company, ticket) => {
+    
+    if(company.cause == 0){
+        return;
+    }
+
+    try {
+        const res = await axios({
+            method: "POST",
+            url: `${company.host}/routerbox/ws/rbx_server_json.php`,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data : {
+                ticket_finish: {
+                    ticket_id: ticket,
+                    cause_id: company.cause,
+                    solution: "Encerrado pelo ChatBot.",
+                    datetime: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                    user: company.rbx_user
+                }
+            }
+        });
+    } catch (error) {
+        Logger.error(`[SERVICE-RBXSOFT] Não conseguiu ecerrar o atendimento`);
+    }
+}

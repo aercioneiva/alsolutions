@@ -12,7 +12,12 @@ const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
 
 
 exports.sendMessageWhatsapp = async(data) => {
-   await enviarMensagemZapMeta(data);
+   const whatsapp = {
+      id: data.id_whatsapp,
+      version: data.version_whatsapp,
+      token: data.token_whatsapp
+   }
+   await enviarMensagemZapMeta(whatsapp, data);
 }
 
 exports.processMessageWhatsapp = async({ message, contacts, contract }) => {

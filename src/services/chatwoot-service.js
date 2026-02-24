@@ -238,7 +238,7 @@ async function _handleConversationResolved(message, company, contract) {
          
 
       // Envia mensagens para RBXSoft se houver ticket
-      if (sessionExists?.ticket > 0) {
+      if (sessionExists.ticket > 0) {
          const messages = await _getMessages(company.account, conversationId);
          if (messages.length > 0) {
             const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
@@ -247,7 +247,7 @@ async function _handleConversationResolved(message, company, contract) {
 
          const gerarPesquisaSatisfacao = await rbxsoftService.gerarPesquisaSatisfacao(company, sessionExists.ticket);
          if(gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link){
-            const linkPesquisa = gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link;   
+            const linkPesquisa = gerarPesquisaSatisfacao.result.[0].generate_questionare_link;   
             let data2 = {
                messaging_product: 'whatsapp',
                to: customerPhoneNumber,
@@ -258,6 +258,8 @@ async function _handleConversationResolved(message, company, contract) {
             };
             enviarMensagemZapMeta(whatsapp, data2);
          }
+
+         await rbxsoftService.encerrarAtendimento(company, sessionExists.ticket);
       }
    } catch (error) {
       Logger.error(`${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`);
