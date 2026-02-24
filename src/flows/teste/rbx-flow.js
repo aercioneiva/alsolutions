@@ -384,6 +384,15 @@ const fluxoAtendimentoRBX = {
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           const boleto = dados.cliente.boletos[opcao-1];
 
+          if(boleto?.pix_copy_paste){
+            return {
+              mensagem: boleto.pix_copy_paste,
+              tipo: 'text',
+              proximoStep: 'finalizar',
+              aguardarResposta: false
+            };
+          }
+
           const pixCopiaCola = await buscarBoletoPIX(dados.company, boleto.id);
           if(pixCopiaCola){
             return {

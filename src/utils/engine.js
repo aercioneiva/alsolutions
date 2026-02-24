@@ -95,7 +95,7 @@ class FlowEngine {
 
     // Verifica se deve finalizar
     if (resultado.finalizar) {
-      await Cache.del(usuarioId);
+      Cache.del(usuarioId);
       return {
         mensagens: _mensagensAcumuladas,
         finalizado: true,
@@ -110,7 +110,7 @@ class FlowEngine {
       sessao.stepAtual = resultado.proximoStep;
     }
 
-    await Cache.del(usuarioId);
+    Cache.del(usuarioId);
 
     await Cache.set(usuarioId,{
            id: sessao.id,
