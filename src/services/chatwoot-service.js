@@ -247,7 +247,7 @@ async function _handleConversationResolved(message, company, contract) {
 
          const gerarPesquisaSatisfacao = await rbxsoftService.gerarPesquisaSatisfacao(company, sessionExists.ticket);
          if(gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link){
-            const linkPesquisa = gerarPesquisaSatisfacao.result.[0].generate_questionare_link;   
+            const linkPesquisa = gerarPesquisaSatisfacao.result[0].generate_questionare_link;   
             let data2 = {
                messaging_product: 'whatsapp',
                to: customerPhoneNumber,
