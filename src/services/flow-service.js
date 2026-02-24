@@ -12,7 +12,7 @@ exports.startFlow = async (company, contactWAID) => {
 
   const flowEngine = new FlowEngine(flow);
 
-  return await flowEngine.iniciarFluxo(company, contactWAID, contract);
+  return await flowEngine.iniciarFluxo(company, contactWAID);
 }
 
 exports.sendMessageFlow = async (company, { session, message }) => {
