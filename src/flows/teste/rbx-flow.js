@@ -54,7 +54,7 @@ const fluxoAtendimentoRBX = {
     buscarCadastro: {
       acao: async (dados) => {
         // Busca o cadastro
-        const response = await buscarCadastroPorDocumento(dados.documento);
+        const response = await buscarCadastroPorDocumento(dados);
         
         if (response) {
             dados.cliente = {
@@ -209,7 +209,7 @@ const fluxoAtendimentoRBX = {
         const opcao = mensagem.trim();
 
         if (opcao == 1) {
-          const boletos = await buscarBoletosEmAberto(dados.cliente);
+          const boletos = await buscarBoletosEmAberto(dados);
           
           if(boletos){
             dados.cliente.boletos = boletos;
@@ -228,7 +228,7 @@ const fluxoAtendimentoRBX = {
             aguardarResposta: false
           };
         } else if (opcao == 2) {
-          const boletos = await buscarBoletosEmAberto(dados.cliente);
+          const boletos = await buscarBoletosEmAberto(dados);
 
           if(boletos){
             dados.cliente.boletos = boletos;
@@ -247,7 +247,7 @@ const fluxoAtendimentoRBX = {
             aguardarResposta: false
           };
         } else if(opcao == 3) {
-          const boletos = await buscarBoletosEmAberto(dados.cliente);
+          const boletos = await buscarBoletosEmAberto(dados);
 
           if(boletos){
             dados.cliente.boletos = boletos;
@@ -320,7 +320,7 @@ const fluxoAtendimentoRBX = {
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           const boleto = dados.cliente.boletos[opcao-1];
 
-          const linkBoleto = await buscarBoletoPDF(boleto.id);
+          const linkBoleto = await buscarBoletoPDF(dados.company, boleto.id);
           if(linkBoleto){
             return {
               mensagem: linkBoleto,
@@ -384,7 +384,7 @@ const fluxoAtendimentoRBX = {
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           const boleto = dados.cliente.boletos[opcao-1];
 
-          const pixCopiaCola = await buscarBoletoPIX(boleto.id);
+          const pixCopiaCola = await buscarBoletoPIX(dados.company, boleto.id);
           if(pixCopiaCola){
             return {
               mensagem: pixCopiaCola,
@@ -483,7 +483,7 @@ const fluxoAtendimentoRBX = {
         let dia = partesData[0];
         let ano = partesData[2];
 
-        const resposta = await informarPagamento(dados.cliente, dados.cliente.boletoSelecionado, `${ano}-${mes}-${dia}`);
+        const resposta = await informarPagamento(dados, `${ano}-${mes}-${dia}`);
 
         if(resposta){
           return {
@@ -515,26 +515,20 @@ const fluxoAtendimentoRBX = {
   }
 };
 
-function validarCPFCNPJ(documento) {
-  // Validação fake - apenas verifica se tem 11 ou 14 dígitos
-  const numeros = documento.replace(/\D/g, '');
-  return numeros.length === 11 || numeros.length === 14;
-}
-
-async function buscarCadastroPorDocumento(documento) {
+async function buscarCadastroPorDocumento(dados) {
   try {
         const res = await axios({
             method: "POST",
-            url: `https://desenv-deb12.rbxsoft.com/routerbox/ws/rbx_server_json.php`,
+            url: `${dados.company.host}/routerbox/ws/rbx_server_json.php`,
             headers: {
                 'Content-Type': 'application/json'
             },
             data : {
                 ConsultaClientes: {
                     Autenticacao: {
-                        ChaveIntegracao: "UZ2H3FF7YBAHTHZW8DRZ6T2L3RAV85"
+                        ChaveIntegracao: dados.company.key_integration
                     },
-                    Filtro: `CNPJ_CNPF='${documento}'`
+                    Filtro: `CNPJ_CNPF='${dados.documento}'`
                 }
             }
         });
@@ -568,19 +562,19 @@ async function salvarContato({contract, cliente}) {
     }
 }
 
-async function buscarBoletosEmAberto(cliente) {
+async function buscarBoletosEmAberto(dados) {
   try {
     const response = await axios({
         method: "POST",
-        url: `https://desenv-deb12.rbxsoft.com/routerbox/ws_json/ws_json.php`,
+        url: `${dados.company.host}/routerbox/ws_json/ws_json.php`,
         headers: {
             'Content-Type': 'application/json',
-            'authentication_key': 'UZ2H3FF7YBAHTHZW8DRZ6T2L3RAV85'
+            'authentication_key': dados.company.key_integration
         },
         data : {
           get_unpaid_document: {
-            customer_id: cliente.codigo, 
-            account_number: 3
+            customer_id: dados.cliente.codigo, 
+            account_number: dados.company.rbx_account
           }
         }
     });
@@ -621,14 +615,14 @@ function validarHorarioAtendimento() {
   return true;
 }
 
-async function buscarBoletoPDF(sequencia) {
+async function buscarBoletoPDF(company, sequencia) {
   try {
     const response = await axios({
         method: "POST",
-        url: `https://desenv-deb12.rbxsoft.com/routerbox/ws_json/ws_json.php`,
+        url: `${company.host}/routerbox/ws_json/ws_json.php`,
         headers: {
             'Content-Type': 'application/json',
-            'authentication_key': 'UZ2H3FF7YBAHTHZW8DRZ6T2L3RAV85'
+            'authentication_key': company.key_integration
         },
         data : {
           get_banking_billet: {
@@ -645,14 +639,14 @@ async function buscarBoletoPDF(sequencia) {
   return null;
 }
 
-async function buscarBoletoPIX(sequencia) {
+async function buscarBoletoPIX(company, sequencia) {
   try {
     const response = await axios({
         method: "POST",
-        url: `https://desenv-deb12.rbxsoft.com/routerbox/ws_json/ws_json.php`,
+        url: `${company.host}/routerbox/ws_json/ws_json.php`,
         headers: {
             'Content-Type': 'application/json',
-            'authentication_key': 'UZ2H3FF7YBAHTHZW8DRZ6T2L3RAV85'
+            'authentication_key': company.key_integration
         },
         data : {
           get_pix_copia_cola: {
@@ -670,20 +664,20 @@ async function buscarBoletoPIX(sequencia) {
   return null;
 }
 
-async function informarPagamento(cliente, boleto, dataPagamento) {
+async function informarPagamento(dados, dataPagamento) {
   try {
     const response = await axios({
         method: "POST",
-        url: `https://desenv-deb12.rbxsoft.com/routerbox/ws_json/ws_json.php`,
+        url: `${dados.company.host}/routerbox/ws_json/ws_json.php`,
         headers: {
             'Content-Type': 'application/json',
-            'authentication_key': 'UZ2H3FF7YBAHTHZW8DRZ6T2L3RAV85'
+            'authentication_key': dados.company.key_integration
         },
         data : {
           send_payment_notification: {
-              document_id: boleto.id,
+              document_id: dados.cliente.boletoSelecionado.id,
               payment_date: dataPagamento,
-              customer_id: cliente.codigo,
+              customer_id: dados.cliente.codigo,
           }
         }
     });

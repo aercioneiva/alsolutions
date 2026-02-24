@@ -2,8 +2,8 @@ const axios = require('axios');
 
 const Logger = require('../libs/logger');
 
-exports.getFileWhatsapp = async(idMedia) => {
-   const token_zap = process.env.ZAP_TOKEN;
+exports.getFileWhatsapp = async(whatsapp, idMedia) => {
+   const token_zap = whatsapp.token;
 
    try {
       const ret_url_file = await axios({

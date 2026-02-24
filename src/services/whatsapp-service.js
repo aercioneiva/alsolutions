@@ -2,7 +2,6 @@ const Cache = require('../libs/cache');
 const Logger = require('../libs/logger');
 const sessionService = require('./session-service');
 const companyService = require('./company-service');
-const typebotService = require('./typebot-service');
 const chatwootService = require('./chatwoot-service');
 const flowService = require('./flow-service');
 const contactService = require('./contact-service');
@@ -26,8 +25,11 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    let chatwoot;
    let contactPhoneNumber;
    let contactName;
-   let id_whatsapp;
-   let version_whatsapp;
+   const whatsapp = {
+      id: '',
+      version: '',
+      token: ''
+   };
    
 
    const cacheCompany = await Cache.get(contract);
@@ -42,31 +44,37 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       Cache.set(contract,{
          name: responseCompany.name,
          contract: contract,
-         id_whatsapp: responseCompany.id_whatsapp, 
+         id_whatsapp: responseCompany.id_whatsapp,
+         token_whatsapp: responseCompany.token_whatsapp,
          version_whatsapp: responseCompany.version_whatsapp,
          flow: responseCompany.flow,
          account: responseCompany.account,
          inbox: responseCompany.inbox,
          system: responseCompany.system,
          key_integration: responseCompany.key_integration,
+         rbx_account: responseCompany.rbx_account,
+         rbx_user: responseCompany.rbx_user,
          host: responseCompany.host,
          fluxo: responseCompany.fluxo,
-         topico: responseCompany.topico
+         topico: responseCompany.topico,
+         cause: responseCompany.cause
       });
 
       account = responseCompany.account;
       inbox = responseCompany.inbox;
       system = responseCompany.system;
       chatwoot = { account, inbox };
-      id_whatsapp = responseCompany.id_whatsapp;
-      version_whatsapp = responseCompany.version_whatsapp;
+      whatsapp.id = responseCompany.id_whatsapp;
+      whatsapp.version = responseCompany.version_whatsapp;
+      whatsapp.token = responseCompany.token_whatsapp;
    }else{
       account = cacheCompany.account;
       inbox = cacheCompany.inbox;
       system = cacheCompany.system;
       chatwoot = { account, inbox };
-      id_whatsapp = cacheCompany.id_whatsapp;
-      version_whatsapp = cacheCompany.version_whatsapp;
+      whatsapp.id = cacheCompany.id_whatsapp;
+      whatsapp.version = cacheCompany.version_whatsapp;
+      whatsapp.token = cacheCompany.token_whatsapp;
    }
 
    contactPhoneNumber = contacts?.[0]?.wa_id || '';
@@ -129,7 +137,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
             fileName = "sticker."+sticker?.mime_type.split("/")[1];
          }
 
-         const file = await getFileWhatsapp(idMedia);
+         const file = await getFileWhatsapp(whatsapp, idMedia);
 
          formData = {type: 'file', file: file.toString('base64'), content: '', fileName: fileName};
          
@@ -144,8 +152,8 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       return;
    }
       
-   //se nao esta em conversa, verifica se ja esta em um fluxo typebot.
-   // se nao tem sessao, inicia com o typebot, caso contrario da continuida no fluxo do typebot
+   //se nao esta em conversa, verifica se ja esta em um fluxo.
+   // se nao tem sessao, inicia com o fluxo, caso contrario da continuida no fluxo
    if(!session){
       const resFlow = await flowService.startFlow({contract: contract, contactWAID: contactPhoneNumber});
       
@@ -159,7 +167,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          return;
       }
 
-      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp);
+      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp);
    }else{
       const resFlow =  await flowService.sendMessageFlow({contract, session: session, message: messagem});
 
@@ -167,7 +175,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          return;
       }
 
-      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp);  
+      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
       sessionService.updateSessionLastMessage(idSession);
@@ -180,23 +188,21 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    return;
 }
 
-async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, id_whatsapp, version_whatsapp){
+async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp){
    const abrirChatWoot = flow.abrir_chamado || false;
 
    for(let i = 0; i < flow.mensagens.length; i++){
       const message = flow.mensagens[i];
 
       if(message.tipo == 'text'){
-         await enviarMensagemZapMeta(
+         await enviarMensagemZapMeta(whatsapp,
             {
                messaging_product: 'whatsapp', 
                to: contactPhoneNumber, 
                text: {
                   body:  message.mensagem
                }, 
-               contract:contract, 
-               id_whatsapp: id_whatsapp, 
-               version_whatsapp: version_whatsapp
+               contract: contract
             }
          );
       }
@@ -206,12 +212,10 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
                link: message.mensagem,
                filename: message.mensagem.split('/')[5] || 'Boleto.pdf'
             },
-            contract: contract,
-            id_whatsapp: id_whatsapp,
-            version_whatsapp: version_whatsapp
+            contract: contract
          };
 
-         await enviarMensagemZapMeta(data);
+         await enviarMensagemZapMeta(whatsapp, data);
       }
    }
 

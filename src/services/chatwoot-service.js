@@ -44,7 +44,7 @@ const CONSTANTS = {
       NEW_CONVERSATION: '#template_novaconversa'
    },
    ERROR_MESSAGES: {
-      WEBHOOK_CREATE_CONVERSATION: '[WHATSAPP] Não conseguiu criar a conversa no TypeBot',
+      WEBHOOK_CREATE_CONVERSATION: '[WHATSAPP] Não conseguiu criar a conversa no ChatWoot',
       INTEGRATION_NOT_FOUND: '[CHATWOOT] Não achou a integração',
       SESSION_CREATION_ERROR: '[CHATWOOT] Erro ao iniciar session',
       CHAT_RESOLUTION_ERROR: '[CHATWOOT] Erro ao resolver chat',
@@ -147,22 +147,25 @@ async function _handleOutgoingMessage(message, company, contract) {
 
 async function _processMessage(message, company, contract, customerPhoneNumber) {
    const senderName = message.sender.name;
+   const whatsapp = {
+      id: company.id_whatsapp,
+      version: company.version_whatsapp,
+      token: company.token_whatsapp
+   };
 
    if (_hasAttachments(message.attachments)) {
       for (const file of message.attachments) {
-         const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract, company.id_whatsapp, company.version_whatsapp);
-         enviarMensagemZapMeta(whatsappFileData);
+         const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
+         enviarMensagemZapMeta(whatsapp, whatsappFileData);
       }
    } else {
       const messageData = {
          messaging_product: 'whatsapp',
          to: customerPhoneNumber,
          text: { body: `*${senderName}:*\n${message.content}` },
-         contract,
-         id_whatsapp: company.id_whatsapp,
-         version_whatsapp: company.version_whatsapp
+         contract
       };
-      enviarMensagemZapMeta(messageData);
+      enviarMensagemZapMeta(whatsapp, messageData);
    }
 }
 
@@ -182,8 +185,13 @@ async function _handleMessageOutside24hWindow(message, company, messageContent, 
          }
       }
 
-      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise', company.id_whatsapp, company.version_whatsapp);
-      enviarMensagemZapMeta(templateData);
+      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise');
+      const whatsapp = {
+         id: company.id_whatsapp,
+         version: company.version_whatsapp,
+         token: company.token_whatsapp
+      };
+      enviarMensagemZapMeta(whatsapp, templateData);
       return;
    }
 
@@ -200,6 +208,11 @@ async function _handleConversationResolved(message, company, contract) {
       const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
       const conversationId = message.id;
       const sessionExists = await sessionService.getSession(customerPhoneNumber);
+      const whatsapp = {
+         id: company.id_whatsapp,
+         version: company.version_whatsapp,
+         token: company.token_whatsapp
+      };
 
       if (!sessionExists || sessionExists.conversation !== conversationId) {
          return;
@@ -218,11 +231,9 @@ async function _handleConversationResolved(message, company, contract) {
             messaging_product: 'whatsapp',
             to: customerPhoneNumber,
             text: { body: `Chat encerrado!` },
-            contract,
-            id_whatsapp: company.id_whatsapp,
-            version_whatsapp: company.version_whatsapp
+            contract
          };
-         enviarMensagemZapMeta(data);
+         enviarMensagemZapMeta(whatsapp, data);
       }  
          
 
@@ -245,7 +256,7 @@ async function _handleConversationResolved(message, company, contract) {
                id_whatsapp: company.id_whatsapp,
                version_whatsapp: company.version_whatsapp
             };
-            enviarMensagemZapMeta(data2);
+            enviarMensagemZapMeta(whatsapp, data2);
          }
       }
    } catch (error) {
@@ -329,15 +340,19 @@ async function _loadCompanyData(contract) {
       name: company.name,
       contract,
       id_whatsapp: company.id_whatsapp,
+      token_whatsapp: company.token_whatsapp,
       version_whatsapp: company.version_whatsapp,
       flow: company.flow,
       account: company.account,
       inbox: company.inbox,
       system: company.system,
       key_integration: company.key_integration,
+      rbx_account: company.rbx_account,
+      rbx_user: company.rbx_user,
       host: company.host,
       fluxo: company.fluxo,
-      topico: company.topico
+      topico: company.topico,
+      cause: company.cause
    };
 
    Cache.set(contract, companyData);
@@ -399,13 +414,11 @@ async function _sendSystemMessage(account, conversationId, messageContent) {
 }
 
 
-function _createWhatsAppFileData(customerPhoneNumber, file, contract, id_whatsapp, version_whatsapp) {
+function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
    const baseData = {
       messaging_product: 'whatsapp',
       to: customerPhoneNumber,
-      contract,
-      id_whatsapp,
-      version_whatsapp
+      contract
    };
 
    const fileType = file.file_type;

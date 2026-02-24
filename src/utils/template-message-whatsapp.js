@@ -1,8 +1,6 @@
-exports.getTemplateNewMessage = (contract, customerPhoneNumber, concatName, conversationId, Status, id_whatsapp, version_whatsapp) => {
+exports.getTemplateNewMessage = (contract, customerPhoneNumber, concatName, conversationId, Status) => {
     return { 
         contract: contract,
-        id_whatsapp: id_whatsapp,
-        version_whatsapp: version_whatsapp,
         messaging_product: "whatsapp",
         to: customerPhoneNumber,
         type: "template",

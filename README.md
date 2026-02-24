@@ -46,8 +46,6 @@ telefones são os números que devem receber a mensagem (para vários números s
 
 ## parte 2
 - o recurso de enviar notificacoes ta fixo a url,conta e key da loga (precisa criar recurso de criar os dados de integracao do provedor)
-- tratar mensagem "Invalid message. Please, try again." typebot
-- tratar typebot, hj esta fixo par ao bot alsolutions(precisa ser por cliente integrado)
 - ajustar o id do telefone oficial que ta fixo hj no codigo para api oficial
 - tratar mensagem Sim/Nao botao oficial
 - criar uma tabela de lock, nao deixar rodar uma rotina mais de uma vez ao mesmo tempo cronjob
@@ -89,6 +87,7 @@ CREATE TABLE company(
     name VARCHAR(100) NOT NULL,
     contract uuid NOT NULL,
     id_whatsapp VARCHAR(50) NOT NULL,
+    token_whatsapp VARCHAR(255) NOT NULL,
     version_whatsapp VARCHAR(10) NOT NULL,
     flow VARCHAR(50) NOT NULL,
     account INT(5) NOT NULL,
@@ -97,8 +96,11 @@ CREATE TABLE company(
     system VARCHAR(60) NOT NULL,
     host VARCHAR(255) NOT NULL,
     key_integration varchar(100) NOT NULL,
+    rbx_account bigint(15) NOT NULL,
+    rbx_user VARCHAR(20) NOT NULL,
     fluxo int(3) NOT NULL,
-    topico int(3) NOT NULL,
+    topico int(5) NOT NULL,
+    cause int(5) NOT NULL,
     status char(1) NOT NULL
 );
 

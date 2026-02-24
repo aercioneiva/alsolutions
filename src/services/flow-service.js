@@ -18,7 +18,7 @@ exports.startFlow = async ({ contract, contactWAID }) => {
 
   const flowEngine = new FlowEngine(flow);
 
-  return await flowEngine.iniciarFluxo(contactWAID, contract);
+  return await flowEngine.iniciarFluxo(company, contactWAID, contract);
 }
 
 exports.sendMessageFlow = async ({ contract, session, message }) => {

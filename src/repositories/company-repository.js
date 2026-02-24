@@ -13,6 +13,7 @@ module.exports = class CompanyRepository {
                name: rows[0].name,
                contract: rows[0].contract,
                id_whatsapp: rows[0].id_whatsapp,
+               token_whatsapp: rows[0].token_whatsapp,
                version_whatsapp: rows[0].version_whatsapp,
                flow: rows[0].flow,
                account: rows[0].account,
@@ -21,8 +22,11 @@ module.exports = class CompanyRepository {
                system: rows[0].system,
                host: rows[0].host,
                key_integration: rows[0].key_integration,
+               rbx_account: rows[0].rbx_account,
+               rbx_user: rows[0].rbx_user,
                fluxo: rows[0].fluxo,
                topico: rows[0].topico,
+               cause: rows[0].cause,
                status: rows[0].status
             };
          }
@@ -43,6 +47,7 @@ module.exports = class CompanyRepository {
             name: row.name,
             contract: row.contract,
             id_whatsapp: row.id_whatsapp,
+            token_whatsapp: row.token_whatsapp,
             version_whatsapp: row.version_whatsapp,
             flow: row.flow,
             account: row.account,
@@ -51,8 +56,11 @@ module.exports = class CompanyRepository {
             system: row.system,
             host: row.host,
             key_integration: row.key_integration,
+            rbx_account: row.rbx_account,
+            rbx_user: row.rbx_user,
             fluxo: row.fluxo,
             topico: row.topico,
+            cause: row.cause,
             status: row.status
          }));
       } catch (error) {
