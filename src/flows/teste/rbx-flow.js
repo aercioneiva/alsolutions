@@ -384,7 +384,7 @@ const fluxoAtendimentoRBX = {
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           const boleto = dados.cliente.boletos[opcao-1];
 
-          if(boleto?.pix_copy_paste){
+          if(boleto.pix_copy_paste){
             return {
               mensagem: boleto.pix_copy_paste,
               tipo: 'text',
