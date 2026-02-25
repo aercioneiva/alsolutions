@@ -93,10 +93,7 @@ exports.gerarPesquisaSatisfacao = async (company, ticket) => {
     return null;
 }
 
-exports.encerrarAtendimento = async (company, ticket) => {
-
-    console.log(company, ticket)
-    
+exports.encerrarAtendimento = async (company, ticket) => {    
     if(company.cause == 0){
         return;
     }
