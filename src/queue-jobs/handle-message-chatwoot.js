@@ -8,6 +8,7 @@ module.exports = {
          await processMessageChatWoot(data);
       } catch (error) {
          Logger.error('Error processing ChatWoot message job');
+         console.log(error);
          throw error;
       }
    }
