@@ -94,6 +94,8 @@ exports.gerarPesquisaSatisfacao = async (company, ticket) => {
 }
 
 exports.encerrarAtendimento = async (company, ticket) => {
+
+    console.log(company, ticket)
     
     if(company.cause == 0){
         return;
@@ -102,9 +104,10 @@ exports.encerrarAtendimento = async (company, ticket) => {
     try {
         const res = await axios({
             method: "POST",
-            url: `${company.host}/routerbox/ws/rbx_server_json.php`,
+            url: `${company.host}/routerbox/ws_json/ws_json.php`,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'authentication_key': company.key_integration
             },
             data : {
                 ticket_finish: {
