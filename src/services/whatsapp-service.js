@@ -84,9 +84,9 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    }else{
       system = cacheCompany.system;
       chatwoot = { 
-         account: responseCompany.chatwoot_account, 
-         inbox: responseCompany.chatwoot_inbox,
-         token: responseCompany.chatwoot_token
+         account: cacheCompany.chatwoot_account, 
+         inbox: cacheCompany.chatwoot_inbox,
+         token: cacheCompany.chatwoot_token
       };
       whatsapp.id = cacheCompany.id_whatsapp;
       whatsapp.version = cacheCompany.version_whatsapp;
