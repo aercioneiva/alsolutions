@@ -7,7 +7,7 @@
 - [ ] rever template de nova conversa, esta fixo
 - [ ] montar logica de template para envio de mensagens avulsas
 - [ ] montar logica de template para envio de notificacoes
-- [ ] implementar fechamento do atendimento ao resolver conversa no chatwoot
+- [X] implementar fechamento do atendimento ao resolver conversa no chatwoot
 - [X] trocar o id do whatsapp para vir como parametro, hj ta fixo
 - [X] ao encerrar uma conversa, validar se é a mesma que o usuario esta em aberta para poder noficar corretamente
 - [X] implementar uma logica para mensagem ativa conversa
@@ -91,8 +91,9 @@ CREATE TABLE company(
     token_whatsapp VARCHAR(255) NOT NULL,
     version_whatsapp VARCHAR(10) NOT NULL,
     flow VARCHAR(50) NOT NULL,
-    account INT(5) NOT NULL,
-    inbox INT(5) NOT NULL,
+    chatwoot_account INT(5) NOT NULL,
+    chatwoot_inbox INT(5) NOT NULL,
+    chatwoot_token VARCHAR(100) NOT NULL,
     downtime INT(3) NOT NULL,
     system VARCHAR(60) NOT NULL,
     host VARCHAR(255) NOT NULL,

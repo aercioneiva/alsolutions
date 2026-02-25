@@ -55,15 +55,14 @@ const CONSTANTS = {
 };
 
 
-exports.startChatwoot = async (account, inbox, name, customAttributes) => {
-   const token = process.env.CHATWOOT_TOKEN;
-   const headers = { headers: { api_access_token: token } };
+exports.startChatwoot = async (chatwoot, name, customAttributes) => {
+   const headers = { headers: { api_access_token: chatwoot.token } };
 
    try {
-      const sourceId = await _getOrCreateContact(account, inbox, name, customAttributes, headers);
+      const sourceId = await _getOrCreateContact(chatwoot, name, customAttributes, headers);
 
       const conversationResponse = await axios.post(
-         `${process.env.CHATWOOT_URL}/accounts/${account}/conversations`,
+         `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations`,
          {
             source_id: sourceId,
             custom_attributes: {
@@ -124,7 +123,7 @@ async function _handleOutgoingMessage(message, company, contract) {
    // Verifica se o usuário está em outra conversa
    if (sessionExists && sessionExists.conversation !== conversationId) {
       const systemMessage = `[SYSTEM] O Usuário ${_getSessionStatus(sessionExists)}, abra outro chat novamente mais tarde`;
-      await _sendSystemMessage(company.account, conversationId, systemMessage);
+      await _sendSystemMessage(company, conversationId, systemMessage);
       return;
    }
 
@@ -195,8 +194,8 @@ async function _handleMessageOutside24hWindow(message, company, messageContent, 
       return;
    }
 
-   await _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
-   await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
+   await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
+   await _sendSystemMessage(company, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
 
    return;
 }
@@ -276,8 +275,8 @@ async function _handleConversationReopened(message, company, contract) {
 
    if (sessionExists) {
       const statusMessage = _getSessionStatus(sessionExists);
-      await _sendSystemMessage(company.account, conversationId, `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`);
-      await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Reabra essa conversa novamente mais tarde!');
+      await _sendSystemMessage(company, conversationId, `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`);
+      await _sendSystemMessage(company, conversationId, '[SYSTEM] Reabra essa conversa novamente mais tarde!');
    } else {
       // Abre conversa novamente
       const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
@@ -291,10 +290,10 @@ async function _handleConversationReopened(message, company, contract) {
       });
 
       if (within24h) {
-         await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Conversa reaberta com whatsapp');
+         await _sendSystemMessage(company, conversationId, '[SYSTEM] Conversa reaberta com whatsapp');
       } else {
-         await _sendSystemMessage(company.account, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
-         await _sendSystemMessage(company.account, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
+         await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
+         await _sendSystemMessage(company, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
       }
    }
 
@@ -345,8 +344,9 @@ async function _loadCompanyData(contract) {
       token_whatsapp: company.token_whatsapp,
       version_whatsapp: company.version_whatsapp,
       flow: company.flow,
-      account: company.account,
-      inbox: company.inbox,
+      chatwoot_account: company.chatwoot_account,
+      chatwoot_inbox: company.chatwoot_inbox,
+      chatwoot_token: company.chatwoot_token,
       downtime: company.downtime,
       system: company.system,
       key_integration: company.key_integration,
@@ -363,7 +363,7 @@ async function _loadCompanyData(contract) {
 }
 
 
-async function _getOrCreateContact(account, inbox, name, customAttributes, headers) {
+async function _getOrCreateContact(chatwoot, name, customAttributes, headers) {
    const payload = {
       payload: [
          {
@@ -377,7 +377,7 @@ async function _getOrCreateContact(account, inbox, name, customAttributes, heade
 
    try {
       const response = await axios.post(
-         `${process.env.CHATWOOT_URL}/accounts/${account}/contacts/filter`,
+         `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts/filter`,
          payload,
          headers
       );
@@ -390,13 +390,13 @@ async function _getOrCreateContact(account, inbox, name, customAttributes, heade
    }
 
    const newContactData = {
-      inbox_id: inbox,
+      inbox_id: chatwoot.inbox,
       name,
       phone_number: `+${customAttributes.number}`
    };
 
    const newContactResponse = await axios.post(
-      `${process.env.CHATWOOT_URL}/accounts/${account}/contacts`,
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`,
       newContactData,
       headers
    );
@@ -405,7 +405,7 @@ async function _getOrCreateContact(account, inbox, name, customAttributes, heade
 }
 
 
-async function _sendSystemMessage(account, conversationId, messageContent) {
+async function _sendSystemMessage(company, conversationId, messageContent) {
    const messageData = {
       type: 'content',
       file: null,
@@ -413,7 +413,13 @@ async function _sendSystemMessage(account, conversationId, messageContent) {
       fileName: null
    };
 
-   await enviarMensagemChatWoot({data: messageData,account,conversationId});
+   const chatwoot = {
+      account: company.chatwoot_account, 
+      inbox: company.chatwoot_inbox, 
+      token: company.chatwoot_token
+   };
+
+   await enviarMensagemChatWoot(chatwoot, {data: messageData, conversationId});
 }
 
 

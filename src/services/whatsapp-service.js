@@ -25,9 +25,11 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    let messagem = '';
    let conversationId = 0;
    let idSession;
-   let account;
-   let inbox;
-   let chatwoot;
+   let chatwoot = {
+      account: '', 
+      inbox: '',
+      token: ''
+   };
    let contactPhoneNumber;
    let contactName;
    let company;
@@ -55,8 +57,9 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          token_whatsapp: responseCompany.token_whatsapp,
          version_whatsapp: responseCompany.version_whatsapp,
          flow: responseCompany.flow,
-         account: responseCompany.account,
-         inbox: responseCompany.inbox,
+         chatwoot_account: responseCompany.chatwoot_account,
+         chatwoot_inbox: responseCompany.chatwoot_inbox,
+         chatwoot_token: responseCompany.chatwoot_token,
          downtime: responseCompany.downtime,
          system: responseCompany.system,
          key_integration: responseCompany.key_integration,
@@ -68,18 +71,23 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          cause: responseCompany.cause
       });
 
-      account = responseCompany.account;
-      inbox = responseCompany.inbox;
+     
       system = responseCompany.system;
-      chatwoot = { account, inbox };
+      chatwoot = { 
+         account: responseCompany.chatwoot_account, 
+         inbox: responseCompany.chatwoot_inbox,
+         token: responseCompany.chatwoot_token
+      };
       whatsapp.id = responseCompany.id_whatsapp;
       whatsapp.version = responseCompany.version_whatsapp;
       whatsapp.token = responseCompany.token_whatsapp;
    }else{
-      account = cacheCompany.account;
-      inbox = cacheCompany.inbox;
       system = cacheCompany.system;
-      chatwoot = { account, inbox };
+      chatwoot = { 
+         account: responseCompany.chatwoot_account, 
+         inbox: responseCompany.chatwoot_inbox,
+         token: responseCompany.chatwoot_token
+      };
       whatsapp.id = cacheCompany.id_whatsapp;
       whatsapp.version = cacheCompany.version_whatsapp;
       whatsapp.token = cacheCompany.token_whatsapp;
@@ -153,7 +161,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          
       }
       
-      await enviarMensagemChatWoot({data: formData, account, conversationId});
+      await enviarMensagemChatWoot(chatwoot, {data: formData, conversationId});
 
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
@@ -230,22 +238,20 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
    }
 
    if(abrirChatWoot){
-      const account = chatwoot.account;
-      const inbox = chatwoot.inbox;
       const customAttributes = { 
          number: contactPhoneNumber, 
          codigo_cliente: flow.cliente.codigo,
          nome_cliente: flow.cliente.nome
       };
       const name = contactPhoneNumber;
-      const conversationId = await chatwootService.startChatwoot(account, inbox, name, customAttributes);
+      const conversationId = await chatwootService.startChatwoot(chatwoot, name, customAttributes);
 
       
       if(conversationId){
          await contactService.updateLastMessage(contactPhoneNumber);
          let formData = {type: 'content', file: '', content: '[SYSTEM] Cliente Solicitando Atendimento', fileName: ''};
 
-         await enviarMensagemChatWoot({data: formData, account, conversationId});
+         await enviarMensagemChatWoot(chatwoot, {data: formData, conversationId});
          
          //atualiza para conversa ativa
          sessionService.updateSession(idSession,{ conversation: conversationId});
