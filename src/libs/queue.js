@@ -2,9 +2,9 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { Queue } = require('bullmq');
 
-const redisConnection = require('../db/redis.js');
+const { createRedisConnection } = require('../db/redis');
 
-exports.HandleMessageWhatsappQueue = new Queue('ProcessarMensagemWhatsapp',{ connection: redisConnection });
-exports.ZapQueue = new Queue('EnviarMensagemWhatsapp',{ connection: redisConnection });
-exports.ZapNotificationsQueue = new Queue('EnviarMensagemZapNotifications',{ connection: redisConnection });
-exports.HandleMessageChatWootQueue = new Queue('ProcessarMensagemChatWoot',{ connection: redisConnection });
+exports.HandleMessageWhatsappQueue = new Queue('ProcessarMensagemWhatsapp',{ connection: createRedisConnection() });
+exports.ZapQueue = new Queue('EnviarMensagemWhatsapp',{ connection: createRedisConnection () });
+exports.ZapNotificationsQueue = new Queue('EnviarMensagemZapNotifications',{ connection: createRedisConnection() });
+exports.HandleMessageChatWootQueue = new Queue('ProcessarMensagemChatWoot',{ connection: createRedisConnection() });

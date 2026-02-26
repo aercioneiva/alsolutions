@@ -11,23 +11,16 @@ const db = knex({
   },
   pool: {
     min: 2,
-    max: 10,
     acquireTimeoutMillis: 30000,
     idleTimeoutMillis: 30000,
-    reapIntervalMillis: 1000
-  }
-});
-
-db.client.pool.on('acquireRequest', () => {
-  //console.log('🔄 Pedindo conexão...');
-});
-
-db.client.pool.on('acquireSuccess', () => {
-  //console.log('✅ Conexão adquirida');
-});
-
-db.client.pool.on('release', () => {
-  //console.log('♻️ Conexão liberada');
+    reapIntervalMillis: 10000,
+    afterCreate: function (conn, done) {
+    conn.query('SELECT 1', function (err) {
+        done(err, conn);
+      });
+    },
+  },
+  asyncStackTraces: process.env.NODE_ENV !== 'production'
 });
 
 if (process.env.NODE_ENV !== 'production') {

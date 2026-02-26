@@ -1,12 +1,9 @@
-const redis = require('../db/redis');
+const { createRedisConnection } = require('../db/redis');
 const Logger = require('./logger');
 
-/**
- * Define um valor no cache com TTL opcional
- * @param {string} key - Chave do cache
- * @param {*} value - Valor a ser armazenado
- * @param {number} ttl - Time to live em segundos (opcional)
- */
+
+const redis = createRedisConnection();
+
 async function set(key, value, ttl = null){
    try {
       if (ttl) {
@@ -15,46 +12,34 @@ async function set(key, value, ttl = null){
          await redis.set(key, JSON.stringify(value));
       }
    } catch (error) {
-      Logger.error('Error setting cache:', error);
+      Logger.error('Error setting cache:');
       throw error;
    }
 }
 
-/**
- * Recupera um valor do cache
- * @param {string} key - Chave do cache
- * @returns {*} Valor armazenado ou null se não encontrado
- */
+
 async function get(key){
    try {
       const value = await redis.get(key);
       return value ? JSON.parse(value) : null;
    } catch (error) {
-      Logger.error('Error getting cache:', error);
+      Logger.error('Error getting cache:');
       return null;
    }
 }
 
-/**
- * Remove uma chave do cache
- * @param {string} key - Chave a ser removida
- * @returns {boolean} True se removido com sucesso
- */
+
 async function del(key){
    try {
       const result = await redis.del(key);
       return result > 0;
    } catch (error) {
-      Logger.error('Error deleting cache:', error);
+      Logger.error('Error deleting cache:');
       return false;
    }
 }
 
-/**
- * Verifica se uma chave existe no cache
- * @param {string} key - Chave a ser verificada
- * @returns {boolean} True se a chave existe
- */
+
 async function exists(key){
    try {
       const result = await redis.exists(key);
@@ -65,12 +50,7 @@ async function exists(key){
    }
 }
 
-/**
- * Define TTL para uma chave existente
- * @param {string} key - Chave do cache
- * @param {number} ttl - Time to live em segundos
- * @returns {boolean} True se definido com sucesso
- */
+
 async function expire(key, ttl){
    try {
       const result = await redis.expire(key, ttl);

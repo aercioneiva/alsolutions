@@ -1,5 +1,4 @@
 const Redis = require('ioredis');
-const Logger = require('../libs/logger');
 
 const redisOptions = {
    port: process.env.REDIS_PORT || 6379,
@@ -15,31 +14,25 @@ const redisOptions = {
    lazyConnect: true
 };
 
-const client = new Redis(redisOptions);
 
-client.on('error', function(error){
-   Logger.error('Redis connection error:');
-});
 
-client.on('connect', function(){
-   Logger.info('Redis connected successfully');
-});
 
-client.on('ready', function(){
-   Logger.info('Redis is ready to receive commands');
-});
+const createRedisConnection = () => {
+   const client = new Redis(redisOptions);
 
-client.on('close', function(){
-   Logger.error('Redis connection closed');
-});
+   client.on('connect', () => {
+      console.log('✅ Redis conectado com sucesso!');
+   });
 
-client.on('reconnecting', function(){
-   Logger.info('Redis reconnecting...');
-});
+   client.on('error', (err) => {
+      console.error('❌ Erro na conexão com o Redis:', err);
+   });
 
-// Test connection on startup
-client.connect().catch(error => {
-   Logger.error('Failed to connect to Redis:');
-});
+   client.on('close', () => {
+      console.warn('⚠️ Conexão com o Redis encerrada.');
+   });
 
-module.exports = client;
+   return client;
+};
+
+module.exports = { createRedisConnection };
