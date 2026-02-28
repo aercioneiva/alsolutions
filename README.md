@@ -5,7 +5,7 @@
 - [ ] montar logica de template para envio de mensagens avulsas
 - [ ] montar logica de template para envio de notificacoes (charge-notifications)
 - [ ] montar logica de template para envio de notificacoes (contract-notifications)
-- [ ] implementar wait nas mensagens vinda do fluxo
+- [X] implementar wait nas mensagens vinda do fluxo
 - [ ] se o usuario iniciar uma nova conversa no chatwoot, abrir um atendimento no rbx. (vai precisar voltar a salvar o cliente vinculado ao contato)
 - [ ] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
 - [ ] ajustar o fluxo para nao salvar o boleto completo
@@ -37,6 +37,7 @@ CREATE TABLE whatsapp_messages (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   message_id VARCHAR(255) UNIQUE,
   user_id VARCHAR(255) NOT NULL,
+  session_id bigint(18) NULL,
   phone_number VARCHAR(50) NOT NULL,
   message_data JSON NOT NULL,
   status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',

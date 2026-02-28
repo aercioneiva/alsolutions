@@ -70,7 +70,7 @@ const fluxoAtendimentoRBX = {
                 tipo: 'text',
                 proximoStep: 'confirmarCadastro',
                 aguardarResposta: false,
-                tempo: 2
+                tempo: 4
             };
         }
 

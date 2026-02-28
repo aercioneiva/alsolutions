@@ -5,6 +5,7 @@ const companyService = require('./company-service');
 const chatwootService = require('./chatwoot-service');
 const flowService = require('./flow-service');
 const contactService = require('./contact-service');
+const db = require('../db/connection.js');
 const { getFileWhatsapp } = require('../utils/get-file-whatsapp');
 const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
 const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
@@ -20,7 +21,7 @@ exports.sendMessageWhatsapp = async(data) => {
    await enviarMensagemZapMeta(whatsapp, data);
 }
 
-exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
+exports.processMessageWhatsapp = async({ message, contacts, contract, dbId: whatsappMessageID}) => {
    let session;
    let messagem = '';
    let conversationId = 0;
@@ -101,16 +102,13 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
       messagem = message.button?.text;
    }
    
-   
    const responseSession = await sessionService.getSession(contactPhoneNumber);
-
 
    if(responseSession){
       session = responseSession.session;
       idSession = responseSession.id;
       conversationId = responseSession.conversation;
    }
-
 
    //se tiver em conversa, troca mensagem com chatwoot e retorna
    if(conversationId > 0){
@@ -182,7 +180,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          return;
       }
 
-      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp);
+      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp, whatsappMessageID);
    }else{
       const resFlow =  await flowService.sendMessageFlow(company, {session: session, message: messagem});
 
@@ -190,7 +188,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
          return;
       }
 
-      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp);  
+      await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp, whatsappMessageID);  
 
       //atualiza a data da da ultima mensagem enviada pelo usuario
       sessionService.updateSessionLastMessage(idSession);
@@ -203,7 +201,7 @@ exports.processMessageWhatsapp = async({ message, contacts, contract }) => {
    return;
 }
 
-async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp){
+async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp, whatsappMessageID){
    const abrirChatWoot = flow.abrir_chamado || false;
 
    for(let i = 0; i < flow.mensagens.length; i++){
@@ -236,6 +234,12 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
       if(message.tempo && message.tempo > 0){
          await waitIfExists(message.tempo);
       }
+
+      try {
+         await db.raw(`UPDATE whatsapp_messages SET session_id = ? WHERE id = ?`, [idSession, whatsappMessageID]);
+      } catch (error) { 
+         console.log('Erro ao atualizar a mensagem do WhatsApp com o ID da sessão:', error); 
+      } 
    }
 
    if(abrirChatWoot){

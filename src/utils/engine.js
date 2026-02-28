@@ -18,8 +18,6 @@ class FlowEngine {
       historico: [],
     },60 * 60 * 24);
 
-    console.log('Sessão iniciada com ID:', id);
-
     return this.executarStep(id);
   }
 
