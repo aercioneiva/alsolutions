@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 dotenv.config();
 const { Worker } = require('bullmq');
-const { createRedisConnection } = require('../db/redis');
+const { createRedisConnection } = require('./db/redis');
 const db = require('./db/connection.js');
 const HandleMessageWhatsapp = require('./queue-jobs/handle-message-whatsapp');
 const HandleMessageChatWoot = require('./queue-jobs/handle-message-chatwoot');
