@@ -5,7 +5,7 @@ const companyService = require('./company-service');
 const chatwootService = require('./chatwoot-service');
 const flowService = require('./flow-service');
 const contactService = require('./contact-service');
-const db = require('../db/connection.js');
+const whatsappMessageService = require('../services/whatsapp-message-service');
 const { getFileWhatsapp } = require('../utils/get-file-whatsapp');
 const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
 const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
@@ -96,10 +96,10 @@ exports.processMessageWhatsapp = async({ message, contacts, contract, dbId: what
    contactPhoneNumber = contacts?.[0]?.wa_id || '';
    contactName = contacts?.[0]?.profile?.name || 'sem nome';
 
-   if(message?.type == 'text'){
-      messagem = message.text?.body;
-   }else if(message?.type == 'button'){
-      messagem = message.button?.text;
+   if(message.type == 'text'){
+      messagem = message.text.body;
+   }else if(message.type == 'button'){
+      messagem = message.button.text;
    }
    
    const responseSession = await sessionService.getSession(contactPhoneNumber);
@@ -236,7 +236,7 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
       }
 
       try {
-         await db.raw(`UPDATE whatsapp_messages SET session_id = ? WHERE id = ?`, [idSession, whatsappMessageID]);
+         await whatsappMessageService.setSessionId(whatsappMessageID, idSession);
       } catch (error) { 
          console.log('Erro ao atualizar a mensagem do WhatsApp com o ID da sessão:', error); 
       } 
@@ -259,7 +259,60 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
          await enviarMensagemChatWoot(chatwoot, {data: formData, conversationId});
          
          //atualiza para conversa ativa
-         sessionService.updateSession(idSession,{ conversation: conversationId});
+         await sessionService.updateSession(idSession,{ conversation: conversationId});
+         
+         try {
+            const whatsappMessages = await whatsappMessageService.getMessageBydSessionId(idSession);
+            for(const whatsappMessage of whatsappMessages){
+               const { message } = JSON.parse(whatsappMessage.message_data);
+
+               if(message.type == 'text'){
+                  formData = {type: 'content', file: null, content: message.text.body, fileName: null};
+               }else if(message.type == 'button'){
+                  formData = {type: 'content', file: null, content: message.button.body, fileName: null};
+               } else {
+                  const {
+                     type, 
+                     audio, 
+                     video, 
+                     document,
+                     sticker, 
+                     image } = message;
+                     
+                  if(type == 'audio'){
+                     idMedia = audio.id;
+                     fileName = "audio.ogg";
+                  }else if(type == 'image'){
+                     idMedia = image.id;
+                     fileName = "image."+image.mime_type.split("/")[1];
+                  }else if(type == 'video'){
+                     idMedia = video.id;
+                     fileName = "video."+video.mime_type.split("/")[1];
+                  }else if(type == 'document'){
+                     idMedia = document.id;
+                     fileName = "document."+document.filename;
+
+                     const ext = document.filename.split('.').pop();
+                     const extensionsNotAllowed = ['php', 'exe', 'js', 'sh', 'bat', 'cmd', 'com', 'scr', 'py', 'jar', 'vbs', 'msi', 'reg', 'dll'];
+                     if(extensionsNotAllowed.includes(ext)){
+                        return;
+                     }
+                  }else if(type == 'sticker'){
+                     idMedia = sticker.id;
+                     fileName = "sticker."+sticker.mime_type.split("/")[1];
+                  }
+
+                  const file = await getFileWhatsapp(whatsapp, idMedia);
+
+                  formData = {type: 'file', file: file.toString('base64'), content: '', fileName: fileName};
+                  
+               }
+               
+               await enviarMensagemChatWoot(chatwoot, {data: formData, conversationId});
+            }
+         } catch (error) {
+            Logger.error(`[WHATSAPP] Erro ao enviar mensagens do WhatsApp para o ChatWoot`);
+         }
       }else{
          //nao conseguiu abri o chamado
          Logger.error(`[WHATSAPP] Não conseguiu abri o chamado ${conversationId}`);

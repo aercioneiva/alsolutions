@@ -7,7 +7,7 @@
 - [ ] montar logica de template para envio de notificacoes (contract-notifications)
 - [X] implementar wait nas mensagens vinda do fluxo
 - [ ] se o usuario iniciar uma nova conversa no chatwoot, abrir um atendimento no rbx. (vai precisar voltar a salvar o cliente vinculado ao contato)
-- [ ] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
+- [X] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
 - [ ] ajustar o fluxo para nao salvar o boleto completo
 
 
@@ -47,7 +47,8 @@ CREATE TABLE whatsapp_messages (
   processed_at DATETIME NULL,
   INDEX idx_user_status (user_id, status, created_at),
   INDEX idx_status_created (status, created_at),
-  INDEX idx_phone (phone_number)
+  INDEX idx_phone (phone_number),
+  INDEX session_id (session_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE company(

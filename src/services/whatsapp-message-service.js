@@ -45,6 +45,16 @@ async function _createMessage(message, metadata, contacts, contract){
    return null;
 }
 
+async function setSessionId(whatsappMessageID, idSession){
+   const messageRepository = _makeMessage();
+   await messageRepository.setSessionId(whatsappMessageID, idSession);
+}
+
+async function getMessageBydSessionId(sessionId){
+   const messageRepository = _makeMessage();
+   return await messageRepository.getMessageBydSessionId(sessionId);
+}
+
 exports.webhook = async(req) => {
    try {
       if(req.body.entry?.[0]?.changes[0]?.value?.statuses){

@@ -22,4 +22,23 @@ module.exports = class WhatsappMessageRepository {
 
       return insertId;
    }
+
+   async setSessionId(whatsappMessageID, idSession) {
+      await db.raw(`UPDATE whatsapp_messages SET session_id = ? WHERE id = ?`, [idSession, whatsappMessageID]);
+   }
+
+   async getMessageBydSessionId(sessionId) {
+      const [ rows ] = await db.raw(`SELECT * FROM whatsapp_messages WHERE session_id = ?`, [sessionId]);
+      
+      return rows.map(row => ({
+         id: row.id,
+         message_id: row.message_id,
+         user_id: row.user_id,
+         phone_number: row.phone_number,
+         message_data: row.message_data,
+         status: row.status,
+         contract: row.contract,
+         session_id: row.session_id
+      }));
+   }
 }
