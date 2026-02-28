@@ -134,6 +134,7 @@ whatsappWorker.on('failed', (job, err) => {
 
 whatsappWorker.on('error', (err) => {
   Logger.error('Erro no worker:');
+  console.log(err);
 });
 
 console.log('🚀 Worker iniciado e aguardando mensagens...');
