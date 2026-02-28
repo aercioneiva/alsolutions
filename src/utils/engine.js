@@ -89,7 +89,8 @@ class FlowEngine {
       sessao.historico.push({ tipo: 'bot', mensagem: resultado.mensagem });
       _mensagensAcumuladas.push({
         tipo: resultado.tipo || null,
-        mensagem: resultado.mensagem
+        mensagem: resultado.mensagem,
+        tempo: resultado.tempo || 0
       });
     }
 

@@ -232,6 +232,10 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
 
          await enviarMensagemZapMeta(whatsapp, data);
       }
+
+      if(message.tempo && message.tempo > 0){
+         await waitIfExists(message.tempo);
+      }
    }
 
    if(abrirChatWoot){
@@ -260,20 +264,7 @@ async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot,
 }
 
 
-async function waitIfExists(clientSideActions, bubbleId) {
-   if(!clientSideActions || !Array.isArray(clientSideActions)) {
-    return;
-  }
-
-  const action = clientSideActions.find(
-    item => item.lastBubbleBlockId === bubbleId
-  );
-
-  if (!action || action.type !== 'wait' || !action.wait?.secondsToWaitFor) {
-    return;
-  }
-
-  const seconds = action.wait.secondsToWaitFor;
-
-  await new Promise(resolve => setTimeout(resolve, seconds * 1000));
+async function waitIfExists(tempo) {
+  
+  await new Promise(resolve => setTimeout(resolve, tempo * 1000));
 }

@@ -14,9 +14,6 @@
 desabilitar a criação de conta pelo login do chatwoot
 https://chatwoot.aercioneiva.com/installation/onboarding  (cria uma conta admin)
 
-bloquear por autenticacao
-https://evo.aercioneiva.com/manager/alsolutions
-
 
 desabilitar notificacao falando que o chatwoot tem versao mais nova
 

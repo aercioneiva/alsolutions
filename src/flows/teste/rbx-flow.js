@@ -69,7 +69,8 @@ const fluxoAtendimentoRBX = {
                 mensagem: 'Aguarde enquanto localizo o cadastro!',
                 tipo: 'text',
                 proximoStep: 'confirmarCadastro',
-                aguardarResposta: false
+                aguardarResposta: false,
+                tempo: 2
             };
         }
 
@@ -326,7 +327,8 @@ const fluxoAtendimentoRBX = {
               mensagem: linkBoleto,
               tipo: 'embed',
               proximoStep: 'finalizar',
-              aguardarResposta: false
+              aguardarResposta: false,
+              tempo: 5
             };
           }
 
