@@ -1,14 +1,14 @@
-const sendMessageService = require('../services/send-message-service');
+const sendMessageService = require("../services/send-message-service");
 
 exports.sendMessage = async (req, res) => {
-   const { contract } = req.params;
-   const { message, numbers } = req.query;
+  const { contract } = req.params;
+  const { message, numbers } = req.query;
 
-   const sent = await sendMessageService.sendMessage(contract, message, numbers);
+  const sent = await sendMessageService.sendMessage(contract, message, numbers);
 
-   if(!sent){
-      return res.status(400).send('{"status": false}');
-   }
+  if (!sent) {
+    return res.status(400).send('{"status": false}');
+  }
 
-   return res.status(201).send('{"status": true}');
-}
+  return res.status(201).send('{"status": true}');
+};

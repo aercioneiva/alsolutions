@@ -1,26 +1,25 @@
-
-const companyService = require('../services/company-service');
+const companyService = require("../services/company-service");
 
 exports.createCompany = async (req, res) => {
-   const { company } = req.body;
+  const { company } = req.body;
 
-   const companyCreated = await companyService.createCompany(company);
+  const companyCreated = await companyService.createCompany(company);
 
-   if(!companyCreated){
-      return res.status(400).send();
-   }
+  if (!companyCreated) {
+    return res.status(400).send();
+  }
 
-   return res.status(201).send();
-}
+  return res.status(201).send();
+};
 
 exports.updateCompany = async (req, res) => {
-   const { company } = req.body;
+  const { company } = req.body;
 
-   const companyUpdated = await companyService.updateCompany(company);
+  const companyUpdated = await companyService.updateCompany(company);
 
-   if(!companyUpdated){
-      return res.status(400).send();
-   }
+  if (!companyUpdated) {
+    return res.status(400).send();
+  }
 
-   return res.status(201).send();
-}
+  return res.status(201).send();
+};

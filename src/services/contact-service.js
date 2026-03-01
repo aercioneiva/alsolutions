@@ -1,69 +1,74 @@
-const companyService = require('./company-service');
-const ContactRepository = require('../repositories/contact-repository');
-const Logger = require('../libs/logger');
+const companyService = require("./company-service");
+const ContactRepository = require("../repositories/contact-repository");
+const Logger = require("../libs/logger");
 
 const makeContact = () => {
-   return new ContactRepository();
-}
-exports.getContact = async ({number,contract}) => {
-   const contactRepository = makeContact();
+  return new ContactRepository();
+};
+exports.getContact = async ({ number, contract }) => {
+  const contactRepository = makeContact();
 
-   if(!number || !contract){
-      return null;
-   }
+  if (!number || !contract) {
+    return null;
+  }
 
-   const responseCompany = await companyService.getCompany(contract);
+  const responseCompany = await companyService.getCompany(contract);
 
-   if(!responseCompany){
-      return null;
-   }
+  if (!responseCompany) {
+    return null;
+  }
 
-   try {
-      return await contactRepository.findContact({number: number.replace(/\D/g, ''), contract});
-   } catch (error) {
-      Logger.error(error)
-   }
+  try {
+    return await contactRepository.findContact({
+      number: number.replace(/\D/g, ""),
+      contract,
+    });
+  } catch (error) {
+    Logger.error(error);
+  }
 
-   return null;
-}
+  return null;
+};
 
 exports.createContact = async (contact) => {
-   const contactRepository = makeContact();
+  const contactRepository = makeContact();
 
-   if(!contact){
-      return null;
-   }
+  if (!contact) {
+    return null;
+  }
 
-   const responseCompany = await companyService.getCompany(contact.contract);
+  const responseCompany = await companyService.getCompany(contact.contract);
 
-   if(!responseCompany){
-      return null;
-   }
+  if (!responseCompany) {
+    return null;
+  }
 
-   try {
-      const oldContact = await contactRepository.findContact({number: contact.number.replace(/\D/g, ''), contract: contact.contract});
-      if(!oldContact){
-         const contactId = await contactRepository.create(contact);
-        
-         return contactId;
-      }
-   
-      return oldContact.id;
-   } catch (error) {
-      Logger.error(`[SERVICE-CONTACT] Erro ao cadastrar contato:`);
-   }
-   
+  try {
+    const oldContact = await contactRepository.findContact({
+      number: contact.number.replace(/\D/g, ""),
+      contract: contact.contract,
+    });
+    if (!oldContact) {
+      const contactId = await contactRepository.create(contact);
 
-   return null;
-}
+      return contactId;
+    }
+
+    return oldContact.id;
+  } catch (error) {
+    Logger.error(`[SERVICE-CONTACT] Erro ao cadastrar contato:`);
+  }
+
+  return null;
+};
 exports.updateLastMessage = async (contactPhoneNumber) => {
-   const contactRepository = makeContact();
+  const contactRepository = makeContact();
 
-   try {
-      return await contactRepository.updateLastMessage(contactPhoneNumber);
-   } catch (error) {
-      Logger.error(`[SERVICE-CONTACT] Erro ao atualizar contato:`);
-   }
+  try {
+    return await contactRepository.updateLastMessage(contactPhoneNumber);
+  } catch (error) {
+    Logger.error(`[SERVICE-CONTACT] Erro ao atualizar contato:`);
+  }
 
-   return null;
-}  
+  return null;
+};

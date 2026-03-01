@@ -1,122 +1,126 @@
-const axios = require('axios');
+const axios = require("axios");
 
-const Logger = require('../libs/logger');
+const Logger = require("../libs/logger");
 
 exports.abrirAtendimento = async (company, data) => {
-    let dadosAtendimento = {
-        Data_Abertura: new Date().toISOString().split('T')[0],
-        Hora_Abertura: new Date().toISOString().split('T')[1].split('.')[0],
-        Iniciativa: "C",
-        Modo: "T",
-        TipoCliente: "C",
-        Cliente: data.customer,
-        Prioridade: "1",
-        Situacao: "A",
-        Assunto: "Chat bot"
-    };
+  let dadosAtendimento = {
+    Data_Abertura: new Date().toISOString().split("T")[0],
+    Hora_Abertura: new Date().toISOString().split("T")[1].split(".")[0],
+    Iniciativa: "C",
+    Modo: "T",
+    TipoCliente: "C",
+    Cliente: data.customer,
+    Prioridade: "1",
+    Situacao: "A",
+    Assunto: "Chat bot",
+  };
 
-    if(company.fluxo > 0){
-        dadosAtendimento.Fluxo = company.fluxo;
-    }else{
-        dadosAtendimento.Topico = company.topico;
-        dadosAtendimento.Tipo = "T";
-    } 
+  if (company.fluxo > 0) {
+    dadosAtendimento.Fluxo = company.fluxo;
+  } else {
+    dadosAtendimento.Topico = company.topico;
+    dadosAtendimento.Tipo = "T";
+  }
 
-    try {
-        const res = await axios({
-            method: "POST",
-            url: `${company.host}/routerbox/ws/rbx_server_json.php`,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data : { 
-                AtendimentoCadastro: {
-                    Autenticacao: {
-                        ChaveIntegracao: company.key_integration
-                    },
-                    DadosAtendimento: dadosAtendimento
-                }
-            }
-        });
+  try {
+    const res = await axios({
+      method: "POST",
+      url: `${company.host}/routerbox/ws/rbx_server_json.php`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      data: {
+        AtendimentoCadastro: {
+          Autenticacao: {
+            ChaveIntegracao: company.key_integration,
+          },
+          DadosAtendimento: dadosAtendimento,
+        },
+      },
+    });
 
-        return res.data;
-    } catch (error) {
-        Logger.error(`[SERVICE-RBXSOFT] Não conseguiu abrir atendimento`);
-        Logger.info(error);
-    }
-    return null;
-}
+    return res.data;
+  } catch (error) {
+    Logger.error(`[SERVICE-RBXSOFT] Não conseguiu abrir atendimento`);
+    Logger.info(error);
+  }
+  return null;
+};
 
 exports.incluirMensagemAtendimento = async (company, messages) => {
-    try {
-        const res = await axios({
-            method: "POST",
-            url: `${company.host}/routerbox/ws_json/ws_json.php`,
-            headers: {
-                'Content-Type': 'application/json',
-                'authentication_key': company.key_integration
-            },
-            data : { 
-                chat_messages: messages 
-            }
-        });
+  try {
+    const res = await axios({
+      method: "POST",
+      url: `${company.host}/routerbox/ws_json/ws_json.php`,
+      headers: {
+        "Content-Type": "application/json",
+        authentication_key: company.key_integration,
+      },
+      data: {
+        chat_messages: messages,
+      },
+    });
 
-        return res.data;
-    } catch (error) {
-        Logger.error(`[SERVICE-RBXSOFT] Não conseguiu incuir as mensagens no atendimento`);
-        Logger.info(error);
-        Logger.error({ chat_messages: messages });
-    }
-    return null;
-}
+    return res.data;
+  } catch (error) {
+    Logger.error(
+      `[SERVICE-RBXSOFT] Não conseguiu incuir as mensagens no atendimento`,
+    );
+    Logger.info(error);
+    Logger.error({ chat_messages: messages });
+  }
+  return null;
+};
 
 exports.gerarPesquisaSatisfacao = async (company, ticket) => {
-    try {
-        const res = await axios({
-            method: "POST",
-            url: `${company.host}/routerbox/ws_json/ws_json.php`,
-            headers: {
-                'Content-Type': 'application/json',
-                'authentication_key': company.key_integration
-            },
-            data : {
-                generate_questionare_link: {
-                    ticket: ticket
-                }
-            }
-        });
+  try {
+    const res = await axios({
+      method: "POST",
+      url: `${company.host}/routerbox/ws_json/ws_json.php`,
+      headers: {
+        "Content-Type": "application/json",
+        authentication_key: company.key_integration,
+      },
+      data: {
+        generate_questionare_link: {
+          ticket: ticket,
+        },
+      },
+    });
 
-        return res.data;
-    } catch (error) {
-        Logger.error(`[SERVICE-RBXSOFT] Não conseguiu gerar o link da pesquisa de satisfação`);
-    }
-    return null;
-}
+    return res.data;
+  } catch (error) {
+    Logger.error(
+      `[SERVICE-RBXSOFT] Não conseguiu gerar o link da pesquisa de satisfação`,
+    );
+  }
+  return null;
+};
 
-exports.encerrarAtendimento = async (company, ticket) => {    
-    if(company.cause == 0){
-        return;
-    }
+exports.encerrarAtendimento = async (company, ticket) => {
+  if (company.cause == 0) {
+    return;
+  }
 
-    try {
-        const res = await axios({
-            method: "POST",
-            url: `${company.host}/routerbox/ws_json/ws_json.php`,
-            headers: {
-                'Content-Type': 'application/json',
-                'authentication_key': company.key_integration
-            },
-            data : {
-                ticket_finish: {
-                    ticket_id: ticket,
-                    cause_id: company.cause,
-                    solution: "Encerrado pelo ChatBot.",
-                    datetime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                    user: company.rbx_user
-                }
-            }
-        });
-    } catch (error) {
-        Logger.error(`[SERVICE-RBXSOFT] Não conseguiu ecerrar o atendimento`);
-    }
-}
+  try {
+    const res = await axios({
+      method: "POST",
+      url: `${company.host}/routerbox/ws_json/ws_json.php`,
+      headers: {
+        "Content-Type": "application/json",
+        authentication_key: company.key_integration,
+      },
+      data: {
+        ticket_finish: {
+          ticket_id: ticket,
+          cause_id: company.cause,
+          solution: "Encerrado pelo ChatBot.",
+          datetime: new Date().toISOString().slice(0, 19).replace("T", " "),
+          user: company.rbx_user,
+        },
+      },
+    });
+  } catch (error) {
+    Logger.error(`[SERVICE-RBXSOFT] Não conseguiu ecerrar o atendimento`);
+  }
+};

@@ -31,4 +31,4 @@ module.exports = class Lock {
   clear() {
     this.map.clear();
   }
-}
+};

@@ -1,537 +1,627 @@
-const axios = require('axios');
+const axios = require("axios");
 
-const { enviarMensagemZapMeta } = require('../utils/send-message-whatsapp');
-const Cache = require('../libs/cache');
-const Logger = require('../libs/logger');
-const sessionService = require('./session-service');
-const companyService = require('./company-service');
-const rbxsoftService = require('./rbxsoft-service');
-const contactService = require('./contact-service');
-const { getTemplateNewMessage } = require('../utils/template-message-whatsapp');
-const { enviarMensagemChatWoot } = require('../utils/send-message-chatwoot');
-
+const { enviarMensagemZapMeta } = require("../utils/send-message-whatsapp");
+const Cache = require("../libs/cache");
+const Logger = require("../libs/logger");
+const sessionService = require("./session-service");
+const companyService = require("./company-service");
+const rbxsoftService = require("./rbxsoft-service");
+const contactService = require("./contact-service");
+const { getTemplateNewMessage } = require("../utils/template-message-whatsapp");
+const { enviarMensagemChatWoot } = require("../utils/send-message-chatwoot");
 
 const CONSTANTS = {
-   EVENTS: {
-      MESSAGE_CREATED: 'message_created',
-      CONVERSATION_STATUS_CHANGED: 'conversation_status_changed',
-      CONVERSATION_CREATED: 'conversation_created'
-   },
-   MESSAGE_TYPES: {
-      OUTGOING: 'outgoing'
-   },
-   CONVERSATION_STATUS: {
-      RESOLVED: 'resolved',
-      OPEN: 'open'
-   },
-   SESSION_TYPES: {
-      CHATWOOT: 'chatwoot'
-   },
-   FILE_TYPES: {
-      FILE: 'file',
-      IMAGE: 'image',
-      AUDIO: 'audio',
-      VIDEO: 'video'
-   },
-   HOURS_24: 24,
-   MS_PER_HOUR: 1000 * 60 * 60,
-   SYSTEM_SENDER: 'routerbox',
-   MESSAGE_ORIGIN: {
-      CONTACT: 'C',
-      ATTENDANT: 'A'
-   },
-   TEMPLATES: {
-      NEW_CONVERSATION: '#template_novaconversa'
-   },
-   ERROR_MESSAGES: {
-      WEBHOOK_CREATE_CONVERSATION: '[WHATSAPP] Não conseguiu criar a conversa no ChatWoot',
-      INTEGRATION_NOT_FOUND: '[CHATWOOT] Não achou a integração',
-      SESSION_CREATION_ERROR: '[CHATWOOT] Erro ao iniciar session',
-      CHAT_RESOLUTION_ERROR: '[CHATWOOT] Erro ao resolver chat',
-      USER_IN_BOT_FLOW: 'está em um fluxo do bot aberto',
-      USER_IN_ANOTHER_CONVERSATION: 'está em outra conversa aberta',
-      CHAT_OUTSIDE_24H_WINDOW: '[SYSTEM] Chat fora da janela de conversa do whatsapp'
-   }
+  EVENTS: {
+    MESSAGE_CREATED: "message_created",
+    CONVERSATION_STATUS_CHANGED: "conversation_status_changed",
+    CONVERSATION_CREATED: "conversation_created",
+  },
+  MESSAGE_TYPES: {
+    OUTGOING: "outgoing",
+  },
+  CONVERSATION_STATUS: {
+    RESOLVED: "resolved",
+    OPEN: "open",
+  },
+  SESSION_TYPES: {
+    CHATWOOT: "chatwoot",
+  },
+  FILE_TYPES: {
+    FILE: "file",
+    IMAGE: "image",
+    AUDIO: "audio",
+    VIDEO: "video",
+  },
+  HOURS_24: 24,
+  MS_PER_HOUR: 1000 * 60 * 60,
+  SYSTEM_SENDER: "routerbox",
+  MESSAGE_ORIGIN: {
+    CONTACT: "C",
+    ATTENDANT: "A",
+  },
+  TEMPLATES: {
+    NEW_CONVERSATION: "#template_novaconversa",
+  },
+  ERROR_MESSAGES: {
+    WEBHOOK_CREATE_CONVERSATION:
+      "[WHATSAPP] Não conseguiu criar a conversa no ChatWoot",
+    INTEGRATION_NOT_FOUND: "[CHATWOOT] Não achou a integração",
+    SESSION_CREATION_ERROR: "[CHATWOOT] Erro ao iniciar session",
+    CHAT_RESOLUTION_ERROR: "[CHATWOOT] Erro ao resolver chat",
+    USER_IN_BOT_FLOW: "está em um fluxo do bot aberto",
+    USER_IN_ANOTHER_CONVERSATION: "está em outra conversa aberta",
+    CHAT_OUTSIDE_24H_WINDOW:
+      "[SYSTEM] Chat fora da janela de conversa do whatsapp",
+  },
 };
-
 
 exports.startChatwoot = async (chatwoot, name, customAttributes) => {
-   const headers = { headers: { api_access_token: chatwoot.token } };
+  const headers = { headers: { api_access_token: chatwoot.token } };
 
-   try {
-      const sourceId = await _getOrCreateContact(chatwoot, name, customAttributes, headers);
+  try {
+    const sourceId = await _getOrCreateContact(
+      chatwoot,
+      name,
+      customAttributes,
+      headers,
+    );
 
-      const conversationResponse = await axios.post(
-         `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations`,
-         {
-            source_id: sourceId,
-            custom_attributes: {
-               codigo_cliente: customAttributes.codigo_cliente,
-               nome_cliente: customAttributes.nome_cliente
-            }
-         },
-         headers
-      );
+    const conversationResponse = await axios.post(
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations`,
+      {
+        source_id: sourceId,
+        custom_attributes: {
+          codigo_cliente: customAttributes.codigo_cliente,
+          nome_cliente: customAttributes.nome_cliente,
+        },
+      },
+      headers,
+    );
 
-      return conversationResponse.data.id;
-   } catch (error) {
-      Logger.error(CONSTANTS.ERROR_MESSAGES.WEBHOOK_CREATE_CONVERSATION);
-      Logger.info(error.message);
-      return null;
-   }
+    return conversationResponse.data.id;
+  } catch (error) {
+    Logger.error(CONSTANTS.ERROR_MESSAGES.WEBHOOK_CREATE_CONVERSATION);
+    Logger.info(error.message);
+    return null;
+  }
 };
-
 
 exports.processMessageChatWoot = async ({ message, contract }) => {
-  
-   try {
-      const company = await _loadCompanyData(contract);
+  try {
+    const company = await _loadCompanyData(contract);
 
-      const eventType = message.event;
-      const status = message.status;
+    const eventType = message.event;
+    const status = message.status;
 
-      switch (true) {
-         case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED && message.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
-            return await _handleOutgoingMessage(message, company, contract);
-         case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
-            return await _handleConversationResolved(message, company, contract);
-         case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
-            return await _handleConversationReopened(message, company, contract);
-         case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
-            return await _handleConversationCreated(message, company, contract);
-         default:
-            return;
-      }
-   } catch (error) {
-      Logger.error(`[CHATWOOT] Erro ao processar webhook: ${error.message}`);
-      return;
-   }
+    switch (true) {
+      case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED &&
+        message.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
+        return await _handleOutgoingMessage(message, company, contract);
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED &&
+        status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
+        return await _handleConversationResolved(message, company, contract);
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED &&
+        status === CONSTANTS.CONVERSATION_STATUS.OPEN:
+        return await _handleConversationReopened(message, company, contract);
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED &&
+        status === CONSTANTS.CONVERSATION_STATUS.OPEN:
+        return await _handleConversationCreated(message, company, contract);
+      default:
+        return;
+    }
+  } catch (error) {
+    Logger.error(`[CHATWOOT] Erro ao processar webhook: ${error.message}`);
+    return;
+  }
 };
 
-
 async function _handleOutgoingMessage(message, company, contract) {
-   const messagePrivate = message.private || false;
-   if (messagePrivate) {
-      return;
-   }
+  const messagePrivate = message.private || false;
+  if (messagePrivate) {
+    return;
+  }
 
-   const customerPhoneNumber = message.conversation.meta.sender.phone_number.replace('+', '');
-   const sessionExists = await sessionService.getSession(customerPhoneNumber);
-   const messageContent = message.content;
-   const conversationId = message.conversation.id;
+  const customerPhoneNumber =
+    message.conversation.meta.sender.phone_number.replace("+", "");
+  const sessionExists = await sessionService.getSession(customerPhoneNumber);
+  const messageContent = message.content;
+  const conversationId = message.conversation.id;
 
-   // Verifica se o usuário está em outra conversa
-   if (sessionExists && sessionExists.conversation !== conversationId) {
-      const systemMessage = `[SYSTEM] O Usuário ${_getSessionStatus(sessionExists)}, abra outro chat novamente mais tarde`;
-      await _sendSystemMessage(company, conversationId, systemMessage);
-      return;
-   }
+  // Verifica se o usuário está em outra conversa
+  if (sessionExists && sessionExists.conversation !== conversationId) {
+    const systemMessage = `[SYSTEM] O Usuário ${_getSessionStatus(sessionExists)}, abra outro chat novamente mais tarde`;
+    await _sendSystemMessage(company, conversationId, systemMessage);
+    return;
+  }
 
-   const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
-   const within24h = _isWithin24hWindow(contact?.lastMessage);
+  const contact = await contactService.getContact({
+    number: customerPhoneNumber,
+    contract,
+  });
+  const within24h = _isWithin24hWindow(contact?.lastMessage);
 
-   // Se está fora da janela de 24h
-   if (!within24h) {
-      return await _handleMessageOutside24hWindow(message, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract);
-   }
+  // Se está fora da janela de 24h
+  if (!within24h) {
+    return await _handleMessageOutside24hWindow(
+      message,
+      company,
+      messageContent,
+      conversationId,
+      customerPhoneNumber,
+      sessionExists,
+      contract,
+    );
+  }
 
-   // Processa a mensagem normalmente
-   if (sessionExists?.conversation === conversationId) {
-      await _processMessage(message, company, contract, customerPhoneNumber);
-   }
+  // Processa a mensagem normalmente
+  if (sessionExists?.conversation === conversationId) {
+    await _processMessage(message, company, contract, customerPhoneNumber);
+  }
 
-   return;
+  return;
 }
 
+async function _processMessage(
+  message,
+  company,
+  contract,
+  customerPhoneNumber,
+) {
+  const senderName = message.sender.name;
+  const whatsapp = {
+    id: company.id_whatsapp,
+    version: company.version_whatsapp,
+    token: company.token_whatsapp,
+  };
 
-async function _processMessage(message, company, contract, customerPhoneNumber) {
-   const senderName = message.sender.name;
-   const whatsapp = {
-      id: company.id_whatsapp,
-      version: company.version_whatsapp,
-      token: company.token_whatsapp
-   };
-
-   if (_hasAttachments(message.attachments)) {
-      for (const file of message.attachments) {
-         const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
-         enviarMensagemZapMeta(whatsapp, whatsappFileData);
-      }
-   } else {
-      const messageData = {
-         messaging_product: 'whatsapp',
-         to: customerPhoneNumber,
-         text: { body: `*${senderName}:*\n${message.content}` },
-         contract
-      };
-      enviarMensagemZapMeta(whatsapp, messageData);
-   }
+  if (_hasAttachments(message.attachments)) {
+    for (const file of message.attachments) {
+      const whatsappFileData = _createWhatsAppFileData(
+        customerPhoneNumber,
+        file,
+        contract,
+      );
+      enviarMensagemZapMeta(whatsapp, whatsappFileData);
+    }
+  } else {
+    const messageData = {
+      messaging_product: "whatsapp",
+      to: customerPhoneNumber,
+      text: { body: `*${senderName}:*\n${message.content}` },
+      contract,
+    };
+    enviarMensagemZapMeta(whatsapp, messageData);
+  }
 }
 
-
-async function _handleMessageOutside24hWindow(message, company, messageContent, conversationId, customerPhoneNumber, sessionExists, contract) {
-   if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
-      if (!sessionExists) {
-         const sessionCreated = await sessionService.createSession({
-            contract,
-            number: customerPhoneNumber,
-            session: CONSTANTS.SESSION_TYPES.CHATWOOT,
-            conversation: conversationId
-         });
-
-         if (!sessionCreated) {
-            Logger.error(CONSTANTS.ERROR_MESSAGES.SESSION_CREATION_ERROR);
-         }
-      }
-
-      const templateData = getTemplateNewMessage(contract, customerPhoneNumber,message.conversation.meta.sender.name, conversationId, 'Em análise');
-      const whatsapp = {
-         id: company.id_whatsapp,
-         version: company.version_whatsapp,
-         token: company.token_whatsapp
-      };
-      enviarMensagemZapMeta(whatsapp, templateData);
-      return;
-   }
-
-   await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
-   await _sendSystemMessage(company, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
-
-   return;
-}
-
-
-async function _handleConversationResolved(message, company, contract) {
-   try {
-      const customerId = message.custom_attributes?.codigo_cliente || 0;
-      const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
-      const conversationId = message.id;
-      const sessionExists = await sessionService.getSession(customerPhoneNumber);
-      const whatsapp = {
-         id: company.id_whatsapp,
-         version: company.version_whatsapp,
-         token: company.token_whatsapp
-      };
-
-      const chatwoot = {
-         account: company.chatwoot_account,
-         inbox: company.chatwoot_inbox,
-         token: company.chatwoot_token
-      };
-
-      if (!sessionExists || sessionExists.conversation !== conversationId) {
-         return;
-      }
-
-      // Deleta a sessão
-      const sessionDeleted = await sessionService.deleteSession(sessionExists.id);
-      if (!sessionDeleted) {
-         Logger.error(CONSTANTS.ERROR_MESSAGES.SESSION_CREATION_ERROR);
-      }
-
-      // Envia mensagem de encerramento se dentro da janela de 24h
-      const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
-      if (_isWithin24hWindow(contact?.lastMessage)) {
-         let data = {
-            messaging_product: 'whatsapp',
-            to: customerPhoneNumber,
-            text: { body: `Chat encerrado!` },
-            contract
-         };
-         enviarMensagemZapMeta(whatsapp, data);
-      }  
-         
-
-      // Envia mensagens para RBXSoft se houver ticket
-      if (sessionExists.ticket > 0) {
-         const messages = await _getMessages(chatwoot, conversationId);
-         if (messages.length > 0) {
-            const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
-            await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
-         }
-
-         const gerarPesquisaSatisfacao = await rbxsoftService.gerarPesquisaSatisfacao(company, sessionExists.ticket);
-         if(gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link){
-            const linkPesquisa = gerarPesquisaSatisfacao.result[0].generate_questionare_link;   
-            let data2 = {
-               messaging_product: 'whatsapp',
-               to: customerPhoneNumber,
-               text: { body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `},
-               contract,
-               id_whatsapp: company.id_whatsapp,
-               version_whatsapp: company.version_whatsapp
-            };
-            enviarMensagemZapMeta(whatsapp, data2);
-         }
-
-         await rbxsoftService.encerrarAtendimento(company, sessionExists.ticket);
-      }
-   } catch (error) {
-      Logger.error(`${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`);
-   }
-
-   return;
-}
-
-
-async function _handleConversationReopened(message, company, contract) {
-   const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
-   const sessionExists = await sessionService.getSession(customerPhoneNumber);
-   const conversationId = message.id;
-
-   if (sessionExists) {
-      const statusMessage = _getSessionStatus(sessionExists);
-      await _sendSystemMessage(company, conversationId, `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`);
-      await _sendSystemMessage(company, conversationId, '[SYSTEM] Reabra essa conversa novamente mais tarde!');
-   } else {
-      // Abre conversa novamente
-      const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
-      const within24h = _isWithin24hWindow(contact?.lastMessage);
-
-      await sessionService.createSession({
-         contract,
-         number: customerPhoneNumber,
-         session: CONSTANTS.SESSION_TYPES.CHATWOOT,
-         conversation: conversationId
+async function _handleMessageOutside24hWindow(
+  message,
+  company,
+  messageContent,
+  conversationId,
+  customerPhoneNumber,
+  sessionExists,
+  contract,
+) {
+  if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
+    if (!sessionExists) {
+      const sessionCreated = await sessionService.createSession({
+        contract,
+        number: customerPhoneNumber,
+        session: CONSTANTS.SESSION_TYPES.CHATWOOT,
+        conversation: conversationId,
       });
 
-      if (within24h) {
-         await _sendSystemMessage(company, conversationId, '[SYSTEM] Conversa reaberta com whatsapp');
-      } else {
-         await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
-         await _sendSystemMessage(company, conversationId, '[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário');
+      if (!sessionCreated) {
+        Logger.error(CONSTANTS.ERROR_MESSAGES.SESSION_CREATION_ERROR);
       }
-   }
+    }
 
-   return;
+    const templateData = getTemplateNewMessage(
+      contract,
+      customerPhoneNumber,
+      message.conversation.meta.sender.name,
+      conversationId,
+      "Em análise",
+    );
+    const whatsapp = {
+      id: company.id_whatsapp,
+      version: company.version_whatsapp,
+      token: company.token_whatsapp,
+    };
+    enviarMensagemZapMeta(whatsapp, templateData);
+    return;
+  }
+
+  await _sendSystemMessage(
+    company,
+    conversationId,
+    CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW,
+  );
+  await _sendSystemMessage(
+    company,
+    conversationId,
+    "[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário",
+  );
+
+  return;
 }
 
+async function _handleConversationResolved(message, company, contract) {
+  try {
+    const customerId = message.custom_attributes?.codigo_cliente || 0;
+    const customerPhoneNumber = message.meta?.sender?.phone_number.replace(
+      "+",
+      "",
+    );
+    const conversationId = message.id;
+    const sessionExists = await sessionService.getSession(customerPhoneNumber);
+    const whatsapp = {
+      id: company.id_whatsapp,
+      version: company.version_whatsapp,
+      token: company.token_whatsapp,
+    };
+
+    const chatwoot = {
+      account: company.chatwoot_account,
+      inbox: company.chatwoot_inbox,
+      token: company.chatwoot_token,
+    };
+
+    if (!sessionExists || sessionExists.conversation !== conversationId) {
+      return;
+    }
+
+    // Deleta a sessão
+    const sessionDeleted = await sessionService.deleteSession(sessionExists.id);
+    if (!sessionDeleted) {
+      Logger.error(CONSTANTS.ERROR_MESSAGES.SESSION_CREATION_ERROR);
+    }
+
+    // Envia mensagem de encerramento se dentro da janela de 24h
+    const contact = await contactService.getContact({
+      number: customerPhoneNumber,
+      contract,
+    });
+    if (_isWithin24hWindow(contact?.lastMessage)) {
+      let data = {
+        messaging_product: "whatsapp",
+        to: customerPhoneNumber,
+        text: { body: `Chat encerrado!` },
+        contract,
+      };
+      enviarMensagemZapMeta(whatsapp, data);
+    }
+
+    // Envia mensagens para RBXSoft se houver ticket
+    if (sessionExists.ticket > 0) {
+      const messages = await _getMessages(chatwoot, conversationId);
+      if (messages.length > 0) {
+        const messagesRbx = _mapMessagesToRbxFormat(
+          messages,
+          customerId,
+          sessionExists.ticket,
+        );
+        await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
+      }
+
+      const gerarPesquisaSatisfacao =
+        await rbxsoftService.gerarPesquisaSatisfacao(
+          company,
+          sessionExists.ticket,
+        );
+      if (gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link) {
+        const linkPesquisa =
+          gerarPesquisaSatisfacao.result[0].generate_questionare_link;
+        let data2 = {
+          messaging_product: "whatsapp",
+          to: customerPhoneNumber,
+          text: {
+            body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `,
+          },
+          contract,
+          id_whatsapp: company.id_whatsapp,
+          version_whatsapp: company.version_whatsapp,
+        };
+        enviarMensagemZapMeta(whatsapp, data2);
+      }
+
+      await rbxsoftService.encerrarAtendimento(company, sessionExists.ticket);
+    }
+  } catch (error) {
+    Logger.error(
+      `${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`,
+    );
+  }
+
+  return;
+}
+
+async function _handleConversationReopened(message, company, contract) {
+  const customerPhoneNumber = message.meta?.sender?.phone_number.replace(
+    "+",
+    "",
+  );
+  const sessionExists = await sessionService.getSession(customerPhoneNumber);
+  const conversationId = message.id;
+
+  if (sessionExists) {
+    const statusMessage = _getSessionStatus(sessionExists);
+    await _sendSystemMessage(
+      company,
+      conversationId,
+      `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`,
+    );
+    await _sendSystemMessage(
+      company,
+      conversationId,
+      "[SYSTEM] Reabra essa conversa novamente mais tarde!",
+    );
+  } else {
+    // Abre conversa novamente
+    const contact = await contactService.getContact({
+      number: customerPhoneNumber,
+      contract,
+    });
+    const within24h = _isWithin24hWindow(contact?.lastMessage);
+
+    await sessionService.createSession({
+      contract,
+      number: customerPhoneNumber,
+      session: CONSTANTS.SESSION_TYPES.CHATWOOT,
+      conversation: conversationId,
+    });
+
+    if (within24h) {
+      await _sendSystemMessage(
+        company,
+        conversationId,
+        "[SYSTEM] Conversa reaberta com whatsapp",
+      );
+    } else {
+      await _sendSystemMessage(
+        company,
+        conversationId,
+        CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW,
+      );
+      await _sendSystemMessage(
+        company,
+        conversationId,
+        "[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário",
+      );
+    }
+  }
+
+  return;
+}
 
 async function _handleConversationCreated(message, company, contract) {
-   try {
-      const customerId = message.custom_attributes?.codigo_cliente || 0;
-      const customerPhoneNumber = message.meta?.sender?.phone_number.replace('+', '');
-      const sessionExists = await sessionService.getSession(customerPhoneNumber);
+  try {
+    const customerId = message.custom_attributes?.codigo_cliente || 0;
+    const customerPhoneNumber = message.meta?.sender?.phone_number.replace(
+      "+",
+      "",
+    );
+    const sessionExists = await sessionService.getSession(customerPhoneNumber);
 
-      if (customerId) {
-         const ticketResponse = await rbxsoftService.abrirAtendimento(company, { customer: customerId });
+    if (customerId) {
+      const ticketResponse = await rbxsoftService.abrirAtendimento(company, {
+        customer: customerId,
+      });
 
-         if (sessionExists && ticketResponse?.result?.NumeroAtendimento) {
-            await sessionService.updateSession(sessionExists.id, {
-               ticket: ticketResponse.result.NumeroAtendimento
-            });
-         }
+      if (sessionExists && ticketResponse?.result?.NumeroAtendimento) {
+        await sessionService.updateSession(sessionExists.id, {
+          ticket: ticketResponse.result.NumeroAtendimento,
+        });
       }
-   } catch (error) {
-      Logger.error(`[CHATWOOT] Erro ao criar conversa: ${error.message}`);
-   }
+    }
+  } catch (error) {
+    Logger.error(`[CHATWOOT] Erro ao criar conversa: ${error.message}`);
+  }
 
-   return;
+  return;
 }
-
 
 async function _loadCompanyData(contract) {
-   const cachedCompany = await Cache.get(contract);
+  const cachedCompany = await Cache.get(contract);
 
-   if (cachedCompany) {
-      return cachedCompany;
-   }
+  if (cachedCompany) {
+    return cachedCompany;
+  }
 
-   const company = await companyService.getCompany(contract);
+  const company = await companyService.getCompany(contract);
 
-   if (!company) {
-      throw new Error(`${CONSTANTS.ERROR_MESSAGES.INTEGRATION_NOT_FOUND} ${contract}`);
-   }
+  if (!company) {
+    throw new Error(
+      `${CONSTANTS.ERROR_MESSAGES.INTEGRATION_NOT_FOUND} ${contract}`,
+    );
+  }
 
-   const companyData = {
-      name: company.name,
-      contract,
-      id_whatsapp: company.id_whatsapp,
-      token_whatsapp: company.token_whatsapp,
-      version_whatsapp: company.version_whatsapp,
-      flow: company.flow,
-      chatwoot_account: company.chatwoot_account,
-      chatwoot_inbox: company.chatwoot_inbox,
-      chatwoot_token: company.chatwoot_token,
-      downtime: company.downtime,
-      system: company.system,
-      key_integration: company.key_integration,
-      rbx_account: company.rbx_account,
-      rbx_user: company.rbx_user,
-      host: company.host,
-      fluxo: company.fluxo,
-      topico: company.topico,
-      cause: company.cause
-   };
+  const companyData = {
+    name: company.name,
+    contract,
+    id_whatsapp: company.id_whatsapp,
+    token_whatsapp: company.token_whatsapp,
+    version_whatsapp: company.version_whatsapp,
+    flow: company.flow,
+    chatwoot_account: company.chatwoot_account,
+    chatwoot_inbox: company.chatwoot_inbox,
+    chatwoot_token: company.chatwoot_token,
+    downtime: company.downtime,
+    system: company.system,
+    key_integration: company.key_integration,
+    rbx_account: company.rbx_account,
+    rbx_user: company.rbx_user,
+    host: company.host,
+    fluxo: company.fluxo,
+    topico: company.topico,
+    cause: company.cause,
+  };
 
-   Cache.set(contract, companyData);
-   return companyData;
+  Cache.set(contract, companyData);
+  return companyData;
 }
-
 
 async function _getOrCreateContact(chatwoot, name, customAttributes, headers) {
-   const payload = {
-      payload: [
-         {
-            attribute_key: 'phone_number',
-            filter_operator: 'contains',
-            values: [`+${customAttributes.number}`],
-            query_operator: null
-         }
-      ]
-   };
+  const payload = {
+    payload: [
+      {
+        attribute_key: "phone_number",
+        filter_operator: "contains",
+        values: [`+${customAttributes.number}`],
+        query_operator: null,
+      },
+    ],
+  };
 
-   try {
-      const response = await axios.post(
-         `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts/filter`,
-         payload,
-         headers
-      );
+  try {
+    const response = await axios.post(
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts/filter`,
+      payload,
+      headers,
+    );
 
-      if (response.data?.payload[0]?.contact_inboxes[0]?.source_id) {
-         return response.data.payload[0].contact_inboxes[0].source_id;
-      }
-   } catch (error) {
-      Logger.info(`[CHATWOOT] Contato não encontrado, criando novo: ${error.message}`);
-   }
+    if (response.data?.payload[0]?.contact_inboxes[0]?.source_id) {
+      return response.data.payload[0].contact_inboxes[0].source_id;
+    }
+  } catch (error) {
+    Logger.info(
+      `[CHATWOOT] Contato não encontrado, criando novo: ${error.message}`,
+    );
+  }
 
-   const newContactData = {
-      inbox_id: chatwoot.inbox,
-      name,
-      phone_number: `+${customAttributes.number}`
-   };
+  const newContactData = {
+    inbox_id: chatwoot.inbox,
+    name,
+    phone_number: `+${customAttributes.number}`,
+  };
 
-   const newContactResponse = await axios.post(
-      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`,
-      newContactData,
-      headers
-   );
+  const newContactResponse = await axios.post(
+    `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`,
+    newContactData,
+    headers,
+  );
 
-   return newContactResponse.data.payload.contact_inbox.source_id;
+  return newContactResponse.data.payload.contact_inbox.source_id;
 }
-
 
 async function _sendSystemMessage(company, conversationId, messageContent) {
-   const messageData = {
-      type: 'content',
-      file: null,
-      content: messageContent,
-      fileName: null
-   };
+  const messageData = {
+    type: "content",
+    file: null,
+    content: messageContent,
+    fileName: null,
+  };
 
-   const chatwoot = {
-      account: company.chatwoot_account, 
-      inbox: company.chatwoot_inbox, 
-      token: company.chatwoot_token
-   };
+  const chatwoot = {
+    account: company.chatwoot_account,
+    inbox: company.chatwoot_inbox,
+    token: company.chatwoot_token,
+  };
 
-   await enviarMensagemChatWoot(chatwoot, {data: messageData, conversationId});
+  await enviarMensagemChatWoot(chatwoot, { data: messageData, conversationId });
 }
-
 
 function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
-   const baseData = {
-      messaging_product: 'whatsapp',
-      to: customerPhoneNumber,
-      contract
-   };
+  const baseData = {
+    messaging_product: "whatsapp",
+    to: customerPhoneNumber,
+    contract,
+  };
 
-   const fileType = file.file_type;
-   const urlFile = file.data_url;
-   const fileName = urlFile.split('/').at(-1);
+  const fileType = file.file_type;
+  const urlFile = file.data_url;
+  const fileName = urlFile.split("/").at(-1);
 
-   const fileConfigs = {
-      [CONSTANTS.FILE_TYPES.FILE]: {
-         type: 'document',
-         document: { link: urlFile, filename: fileName }
-      },
-      [CONSTANTS.FILE_TYPES.IMAGE]: {
-         type: 'image',
-         image: { link: urlFile }
-      },
-      [CONSTANTS.FILE_TYPES.AUDIO]: {
-         type: 'audio',
-         audio: { link: urlFile }
-      },
-      [CONSTANTS.FILE_TYPES.VIDEO]: {
-         type: 'video',
-         video: { link: urlFile }
-      }
-   };
+  const fileConfigs = {
+    [CONSTANTS.FILE_TYPES.FILE]: {
+      type: "document",
+      document: { link: urlFile, filename: fileName },
+    },
+    [CONSTANTS.FILE_TYPES.IMAGE]: {
+      type: "image",
+      image: { link: urlFile },
+    },
+    [CONSTANTS.FILE_TYPES.AUDIO]: {
+      type: "audio",
+      audio: { link: urlFile },
+    },
+    [CONSTANTS.FILE_TYPES.VIDEO]: {
+      type: "video",
+      video: { link: urlFile },
+    },
+  };
 
-   const config = fileConfigs[fileType];
-   if (!config) {
-      throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
-   }
+  const config = fileConfigs[fileType];
+  if (!config) {
+    throw new Error(`Tipo de arquivo não suportado: ${fileType}`);
+  }
 
-   return { ...baseData, ...config };
+  return { ...baseData, ...config };
 }
-
 
 function _hasAttachments(attachments) {
-   return Array.isArray(attachments) && attachments.length > 0;
+  return Array.isArray(attachments) && attachments.length > 0;
 }
-
 
 function _getSessionStatus(session) {
-   return session?.conversation > 0
-      ? CONSTANTS.ERROR_MESSAGES.USER_IN_ANOTHER_CONVERSATION
-      : CONSTANTS.ERROR_MESSAGES.USER_IN_BOT_FLOW;
+  return session?.conversation > 0
+    ? CONSTANTS.ERROR_MESSAGES.USER_IN_ANOTHER_CONVERSATION
+    : CONSTANTS.ERROR_MESSAGES.USER_IN_BOT_FLOW;
 }
-
 
 function _isWithin24hWindow(date) {
-   if (!date) return false;
-   const lastMessageDate = new Date(date);
-   const diffMs = Date.now() - lastMessageDate.getTime();
-   const diffHours = diffMs / CONSTANTS.MS_PER_HOUR;
-   return diffHours <= CONSTANTS.HOURS_24;
+  if (!date) return false;
+  const lastMessageDate = new Date(date);
+  const diffMs = Date.now() - lastMessageDate.getTime();
+  const diffHours = diffMs / CONSTANTS.MS_PER_HOUR;
+  return diffHours <= CONSTANTS.HOURS_24;
 }
-
 
 function _getDateTime(timestamp) {
-   const date = new Date(timestamp * 1000);
+  const date = new Date(timestamp * 1000);
 
-   const year = date.getFullYear();
-   const month = String(date.getMonth() + 1).padStart(2, '0');
-   const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
-   const hours = String(date.getHours()).padStart(2, '0');
-   const minutes = String(date.getMinutes()).padStart(2, '0');
-   const seconds = String(date.getSeconds()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
 
-   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-
 
 async function _getMessages(chatwoot, conversationId) {
-   try {
-      const token = chatwoot.token;
-      const headers = { headers: { api_access_token: token } };
+  try {
+    const token = chatwoot.token;
+    const headers = { headers: { api_access_token: token } };
 
-      const response = await axios.get(
-         `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations/${conversationId}/messages`,
-         headers
-      );
+    const response = await axios.get(
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations/${conversationId}/messages`,
+      headers,
+    );
 
-      return response.data?.payload || [];
-   } catch (error) {
-      Logger.error(`[CHATWOOT] Erro ao buscar mensagens: ${error.message}`);
-      return [];
-   }
+    return response.data?.payload || [];
+  } catch (error) {
+    Logger.error(`[CHATWOOT] Erro ao buscar mensagens: ${error.message}`);
+    return [];
+  }
 }
 
-
 function _mapMessagesToRbxFormat(messages, customerId, ticketId) {
-   return messages
-      .filter(msg => msg.private === false)
-      .filter(msg => msg.content !== null)
-      .map(msg => ({
-         record: _getDateTime(msg.created_at),
-         customer: customerId,
-         ticket_id: ticketId,
-         attendant: CONSTANTS.SYSTEM_SENDER,
-         origin: msg?.sender?.type === 'contact' ? CONSTANTS.MESSAGE_ORIGIN.CONTACT : CONSTANTS.MESSAGE_ORIGIN.ATTENDANT,
-         content: msg.content
-      }));
+  return messages
+    .filter((msg) => msg.private === false)
+    .filter((msg) => msg.content !== null)
+    .map((msg) => ({
+      record: _getDateTime(msg.created_at),
+      customer: customerId,
+      ticket_id: ticketId,
+      attendant: CONSTANTS.SYSTEM_SENDER,
+      origin:
+        msg?.sender?.type === "contact"
+          ? CONSTANTS.MESSAGE_ORIGIN.CONTACT
+          : CONSTANTS.MESSAGE_ORIGIN.ATTENDANT,
+      content: msg.content,
+    }));
 }

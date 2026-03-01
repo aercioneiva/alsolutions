@@ -1,30 +1,29 @@
-## parte 1 
->(API)
+## parte 1
+
+> (API)
+
 - [ ] implementar linter no codigo
 - [ ] rever template de nova conversa, esta fixo
 - [ ] montar logica de template para envio de mensagens avulsas
 - [ ] montar logica de template para envio de notificacoes (charge-notifications)
 - [ ] montar logica de template para envio de notificacoes (contract-notifications)
-- [X] implementar wait nas mensagens vinda do fluxo
+- [x] implementar wait nas mensagens vinda do fluxo
 - [ ] se o usuario iniciar uma nova conversa no chatwoot, abrir um atendimento no rbx. (vai precisar voltar a salvar o cliente vinculado ao contato)
-- [X] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
-- [X] ajustar o fluxo para nao salvar o boleto completo
-- [X] apagar whatsapp_messages após 1h
+- [x] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
+- [x] ajustar o fluxo para nao salvar o boleto completo
+- [x] apagar whatsapp_messages após 1h
 - [ ] separar cron e work da API
 
-
 desabilitar a criação de conta pelo login do chatwoot
-https://chatwoot.aercioneiva.com/installation/onboarding  (cria uma conta admin)
-
+https://chatwoot.aercioneiva.com/installation/onboarding (cria uma conta admin)
 
 desabilitar notificacao falando que o chatwoot tem versao mais nova
-
 
 https://meujames.com/api/playsms?&op=pv&u=|USUARIO|&h=|SENHA|&msg=|MENSAGEM|&to=|CELULAR|
 telefones são os números que devem receber a mensagem (para vários números separe-os por vírgula).
 
-
 ## parte 2
+
 - criar uma tabela de lock, nao deixar rodar uma rotina mais de uma vez ao mesmo tempo cronjob
 - implementar uma logica para armazenar as conversas do usuario caso ele precise iniciar um atendimento. hj inicia o chatwoot sem nada (salvar no banco e ir limpando todo dia para nao acumular, ou até ele iniciar a conversa no chatwoot. salvar só as mensagens dele em trativa com o bot)
 - implementar a troca de usuarios na conversa(ex muda de atendente ou setor). verificar se tem mais alguma ação na conversa para tratar
@@ -36,94 +35,88 @@ telefones são os números que devem receber a mensagem (para vários números s
 CREATE DATABASE alsolutions;
 
 CREATE TABLE whatsapp_messages (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  message_id VARCHAR(255) UNIQUE,
-  user_id VARCHAR(255) NOT NULL,
-  session_id bigint(18) NULL,
-  phone_number VARCHAR(50) NOT NULL,
-  message_data JSON NOT NULL,
-  status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
-  attempts INT DEFAULT 0,
-  error_message TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  processed_at DATETIME NULL,
-  INDEX idx_user_status (user_id, status, created_at),
-  INDEX idx_status_created (status, created_at),
-  INDEX idx_phone (phone_number),
-  INDEX session_id (session_id)
+id BIGINT PRIMARY KEY AUTO_INCREMENT,
+message_id VARCHAR(255) UNIQUE,
+user_id VARCHAR(255) NOT NULL,
+session_id bigint(18) NULL,
+phone_number VARCHAR(50) NOT NULL,
+message_data JSON NOT NULL,
+status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
+attempts INT DEFAULT 0,
+error_message TEXT,
+created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+processed_at DATETIME NULL,
+INDEX idx_user_status (user_id, status, created_at),
+INDEX idx_status_created (status, created_at),
+INDEX idx_phone (phone_number),
+INDEX session_id (session_id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE company(
-    id bigint(18) PRIMARY KEY AUTO_INCREMENT,
-    contract uuid NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    contract uuid NOT NULL,
-    id_whatsapp VARCHAR(50) NOT NULL,
-    token_whatsapp VARCHAR(255) NOT NULL,
-    version_whatsapp VARCHAR(10) NOT NULL,
-    flow VARCHAR(50) NOT NULL,
-    chatwoot_account INT(5) NOT NULL,
-    chatwoot_inbox INT(5) NOT NULL,
-    chatwoot_token VARCHAR(100) NOT NULL,
-    downtime INT(3) NOT NULL,
-    system VARCHAR(60) NOT NULL,
-    host VARCHAR(255) NOT NULL,
-    key_integration varchar(100) NOT NULL,
-    rbx_account bigint(15) NOT NULL,
-    rbx_user VARCHAR(20) NOT NULL,
-    fluxo int(3) NOT NULL,
-    topico int(5) NOT NULL,
-    cause int(5) NOT NULL,
-    status char(1) NOT NULL
+id bigint(18) PRIMARY KEY AUTO_INCREMENT,
+contract uuid NOT NULL,
+name VARCHAR(100) NOT NULL,
+contract uuid NOT NULL,
+id_whatsapp VARCHAR(50) NOT NULL,
+token_whatsapp VARCHAR(255) NOT NULL,
+version_whatsapp VARCHAR(10) NOT NULL,
+flow VARCHAR(50) NOT NULL,
+chatwoot_account INT(5) NOT NULL,
+chatwoot_inbox INT(5) NOT NULL,
+chatwoot_token VARCHAR(100) NOT NULL,
+downtime INT(3) NOT NULL,
+system VARCHAR(60) NOT NULL,
+host VARCHAR(255) NOT NULL,
+key_integration varchar(100) NOT NULL,
+rbx_account bigint(15) NOT NULL,
+rbx_user VARCHAR(20) NOT NULL,
+fluxo int(3) NOT NULL,
+topico int(5) NOT NULL,
+cause int(5) NOT NULL,
+status char(1) NOT NULL
 );
 
 CREATE TABLE contact(
-    id bigint(18) PRIMARY KEY AUTO_INCREMENT,
-    contract uuid NOT NULL,
-    number VARCHAR(20) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    last_message DATETIME DEFAULT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_contact_number (number)
+id bigint(18) PRIMARY KEY AUTO_INCREMENT,
+contract uuid NOT NULL,
+number VARCHAR(20) NOT NULL,
+name VARCHAR(100) NOT NULL,
+last_message DATETIME DEFAULT NULL,
+created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+UNIQUE KEY uk_contact_number (number)
 );
 
 CREATE TABLE `contact_customer` (
-  `Id` bigint(18) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  `contact_id` bigint(18) NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `document` varchar(19) NOT NULL,
-  `code` varchar(36) NOT NULL,
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (`contact_id`) REFERENCES `contact` (`id`) ON DELETE RESTRICT
+`Id` bigint(18) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+`contact_id` bigint(18) NOT NULL,
+`name` varchar(100) NOT NULL,
+`document` varchar(19) NOT NULL,
+`code` varchar(36) NOT NULL,
+`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+FOREIGN KEY (`contact_id`) REFERENCES `contact` (`id`) ON DELETE RESTRICT
 );
-
 
 CREATE TABLE session(
-    id bigint(18) PRIMARY KEY AUTO_INCREMENT,
-    contract uuid NOT NULL,
-    number VARCHAR(20) NOT NULL,
-    session VARCHAR(60) NOT NULL,
-    conversation bigint NOT NULL,
-    ticket bigint NOT NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+id bigint(18) PRIMARY KEY AUTO_INCREMENT,
+contract uuid NOT NULL,
+number VARCHAR(20) NOT NULL,
+session VARCHAR(60) NOT NULL,
+conversation bigint NOT NULL,
+ticket bigint NOT NULL,
+updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
-
 
 ALTER TABLE `contact`
 ADD INDEX `contract_number` (`contract`, `number`);
 
-
 INSERT INTO company (name,contract,account,inbox,downtime,system,status, host,key_integration,fluxo,topico) VALUES ('my company','1220F3E9-F792-40CD-937A-F9FC6F79395F',1,1,5,'routerbox','A','','',0,0);
 
-
-
 {
-  "Cliente":  123456
-  "Contrato": 123456
-  "Evento": "BLOCK"
+"Cliente": 123456
+"Contrato": 123456
+"Evento": "BLOCK"
 }
 
 ACTIVATE => 'Ativado'
@@ -132,9 +125,9 @@ UNBLOCK => 'Desbloqueado'
 SUSPEND => 'Suspenso'
 REACTIVATE => 'Reativado'
 CANCEL => 'Cancelado'
-BANDWIDTH_LIMIT	=> 'Reduzido a banda de navegação'
+BANDWIDTH_LIMIT => 'Reduzido a banda de navegação'
 
-Olá [fulano], seu contrato foi [evento] em nossa base 
+Olá [fulano], seu contrato foi [evento] em nossa base
 
 se evento (BLOCK,CANCEL,BANDWIDTH_LIMIT)
 , para regularização entre em contato com a gente pelo telefone (44) 98888-8888
@@ -145,30 +138,32 @@ ACTIVATE,BLOCK,UNBLOCK,SUSPEND,REACTIVATE,CANCEL,BANDWIDTH_LIMIT
 const zlib = require('zlib');
 
 async function set(key, value, ttl = null) {
-   try {
-      const serialized = JSON.stringify(value);
-      const compressed = await zlib.gzipSync(serialized);
-      
+try {
+const serialized = JSON.stringify(value);
+const compressed = await zlib.gzipSync(serialized);
+
       if (ttl) {
          await redis.setex(key, ttl, compressed);
       } else {
          await redis.set(key, compressed);
       }
-   } catch (error) {
-      Logger.error('Error setting cache:', error);
-      throw error;
-   }
+
+} catch (error) {
+Logger.error('Error setting cache:', error);
+throw error;
+}
 }
 
 async function get(key) {
-   try {
-      const compressed = await redis.get(key);
-      if (!compressed) return null;
-      
+try {
+const compressed = await redis.get(key);
+if (!compressed) return null;
+
       const decompressed = zlib.gunzipSync(compressed);
       return JSON.parse(decompressed);
-   } catch (error) {
-      Logger.error('Error getting cache:', error);
-      return null;
-   }
+
+} catch (error) {
+Logger.error('Error getting cache:', error);
+return null;
+}
 }

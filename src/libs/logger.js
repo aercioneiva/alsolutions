@@ -1,17 +1,17 @@
-const dotenv = require('dotenv');
+const dotenv = require("dotenv");
 dotenv.config();
 
-const logger = require('pino')();
+const logger = require("pino")();
 
-function info(msg){
-   logger.info(msg);
+function info(msg) {
+  logger.info(msg);
 }
 
-function error(msg){
-   logger.error(msg);
+function error(msg) {
+  logger.error(msg);
 }
 
 module.exports = {
-   info,
-   error
-}
+  info,
+  error,
+};
