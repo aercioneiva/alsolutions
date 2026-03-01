@@ -43,7 +43,7 @@ module.exports = class WhatsappMessageRepository {
    }
 
    async deleteOldMessages() {
-      const [ rows ] = await db.raw(`SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id`);
+      const [ rows ] = await db.raw(`SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id LIMIT 1`);
 
       for(const row of rows){
          await db.raw(`DELETE FROM whatsapp_messages WHERE id = ?`, [row.id]);

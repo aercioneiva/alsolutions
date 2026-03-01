@@ -63,7 +63,7 @@ const fluxoAtendimentoRBX = {
                 whatsapp: dados.usuarioId,
                 boletos: []
             };
-            console.log(dados)
+
             return {
                 mensagem: 'Aguarde enquanto localizo o cadastro!',
                 tipo: 'text',
