@@ -28,7 +28,7 @@ module.exports = class WhatsappMessageRepository {
    }
 
    async getMessageBydSessionId(sessionId) {
-      const [ rows ] = await db.raw(`SELECT * FROM whatsapp_messages WHERE session_id = ? ORDER BY id`, [sessionId]);
+      const [ rows ] = await db.raw(`SELECT * FROM whatsapp_messages WHERE session_id = ? ORDER BY id limit 1`, [sessionId]);
       
       return rows.map(row => ({
          id: row.id,
@@ -43,7 +43,7 @@ module.exports = class WhatsappMessageRepository {
    }
 
    async deleteOldMessages() {
-      const [ rows ] = await db.raw(`SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id LIMIT 1`);
+      const [ rows ] = await db.raw(`SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id`);
 
       for(const row of rows){
          await db.raw(`DELETE FROM whatsapp_messages WHERE id = ?`, [row.id]);
