@@ -7,7 +7,6 @@ const fluxoAtendimentoRBX = {
   steps: {
     inicio: {
       acao: async (dados, mensagem) => {
-        console.log(dados)
         return {
           mensagem: 'Olá, que bom que você entrou em contato com a Loga!',
           tipo: 'text',
@@ -502,7 +501,6 @@ const fluxoAtendimentoRBX = {
 
     avisoPagamento: {
       acao: async (dados, mensagem) => {
-        console.log(dados);
         if (!mensagem) {
           return {
             mensagem: 'Preciso que você Informe a data de pagamento no formato 00/00/0000',

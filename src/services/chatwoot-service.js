@@ -238,7 +238,7 @@ async function _handleConversationResolved(message, company, contract) {
 
       // Envia mensagens para RBXSoft se houver ticket
       if (sessionExists.ticket > 0) {
-         const messages = await _getMessages(company.account, conversationId);
+         const messages = await _getMessages(company, conversationId);
          if (messages.length > 0) {
             const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
             await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
@@ -498,13 +498,13 @@ function _getDateTime(timestamp) {
 }
 
 
-async function _getMessages(account, conversationId) {
+async function _getMessages(chatwoot, conversationId) {
    try {
-      const token = process.env.CHATWOOT_TOKEN;
+      const token = chatwoot.token;
       const headers = { headers: { api_access_token: token } };
 
       const response = await axios.get(
-         `${process.env.CHATWOOT_URL}/accounts/${account}/conversations/${conversationId}/messages`,
+         `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations/${conversationId}/messages`,
          headers
       );
 
