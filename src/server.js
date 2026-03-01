@@ -8,6 +8,9 @@ const server = http.createServer(app);
 async function main() {
   server.listen(process.env.PORT ?? 3001, async () => {
     Logger.info(`Listening on port ${process.env.PORT ?? 3001}...`);
+    console.log(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const now = new Date();
+    console.log(now.toLocaleString("pt-BR"));
   });
 
   process.on("uncaughtException", (err) => {

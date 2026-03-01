@@ -6,10 +6,10 @@
   "author": "Aércio F Neiva",
   "scripts": {
     "start": "npm run server & npm run queue & npm run cron",
-    "server": "node src/server.js",
+    "server": "TZ='America/Sao_Paulo' node src/server.js",
     "dev": "nodemon src/server.js",
-    "queue": "node src/queue.js",
-    "cron": "node src/cron.js",
+    "queue": "TZ='America/Sao_Paulo' node src/queue.js",
+    "cron": "TZ='America/Sao_Paulo' node src/cron.js",
     "lint:check": "prettier --check .",
     "lint:fix": "prettier --write ."
   },
