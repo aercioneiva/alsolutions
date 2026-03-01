@@ -10,6 +10,7 @@
 - [X] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
 - [X] ajustar o fluxo para nao salvar o boleto completo
 - [X] apagar whatsapp_messages após 1h
+- [ ] separar cron e work da API
 
 
 desabilitar a criação de conta pelo login do chatwoot
