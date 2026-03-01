@@ -45,17 +45,17 @@ async function _createMessage(message, metadata, contacts, contract){
    return null;
 }
 
-async function setSessionId(whatsappMessageID, idSession){
+exports.setSessionId = async (whatsappMessageID, idSession) => {
    const messageRepository = _makeMessage();
    await messageRepository.setSessionId(whatsappMessageID, idSession);
 }
 
-async function getMessageBydSessionId(sessionId){
+exports.getMessageBydSessionId = async (sessionId) => {
    const messageRepository = _makeMessage();
    return await messageRepository.getMessageBydSessionId(sessionId);
 }
 
-async function deleteOldMessages(days){
+exports.deleteOldMessages = async () => {
    const messageRepository = _makeMessage();
    await messageRepository.deleteOldMessages();
 }
