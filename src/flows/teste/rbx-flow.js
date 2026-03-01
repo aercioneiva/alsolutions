@@ -213,7 +213,15 @@ const fluxoAtendimentoRBX = {
           const boletos = await buscarBoletosEmAberto(dados);
           
           if(boletos){
-            dados.cliente.boletos = boletos;
+            dados.cliente.boletos = boletos.map((boleto) => {
+              return {
+                id: boleto.id,
+                due_date: boleto.due_date,
+                value_init: boleto.value_init,
+                pix_copy_paste: boleto.pix_copy_paste || null
+              }
+            });
+
             return {
               mensagem: `Encontrei ${boletos.length} boleto(s) em aberto para  ${dados.cliente.nome}`,
               tipo: 'text',
@@ -232,7 +240,15 @@ const fluxoAtendimentoRBX = {
           const boletos = await buscarBoletosEmAberto(dados);
 
           if(boletos){
-            dados.cliente.boletos = boletos;
+            dados.cliente.boletos = boletos.map((boleto) => {
+              return {
+                id: boleto.id,
+                due_date: boleto.due_date,
+                value_init: boleto.value_init,
+                pix_copy_paste: boleto.pix_copy_paste || null
+              }
+            });
+            
             return {
               mensagem: `Encontrei ${boletos.length} boleto(s) em aberto para  ${dados.cliente.nome}`,
               tipo: 'text',
@@ -251,7 +267,15 @@ const fluxoAtendimentoRBX = {
           const boletos = await buscarBoletosEmAberto(dados);
 
           if(boletos){
-            dados.cliente.boletos = boletos;
+            dados.cliente.boletos = boletos.map((boleto) => {
+              return {
+                id: boleto.id,
+                due_date: boleto.due_date,
+                value_init: boleto.value_init,
+                pix_copy_paste: boleto.pix_copy_paste || null
+              }
+            });
+
             return {
               mensagem: `Encontrei ${boletos.length} boleto(s) em aberto para  ${dados.cliente.nome}`,
               tipo: 'text',
