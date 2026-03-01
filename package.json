@@ -5,7 +5,7 @@
   "main": "server.js",
   "author": "Aércio F Neiva",
   "scripts": {
-    "start": "npm-run-all -p server queue cron",
+    "start": "npm run server & npm run queue & npm run cron",
     "server": "node src/server.js",
     "dev": "nodemon src/server.js",
     "queue": "node src/queue.js",
@@ -24,7 +24,6 @@
     "luxon": "^3.7.2",
     "mysql2": "^3.6.5",
     "node-cron": "^3.0.3",
-    "npm-run-all": "^4.1.5",
     "pino": "^9.4.0",
     "uuid": "^13.0.0",
     "xss-clean": "^0.1.4"
