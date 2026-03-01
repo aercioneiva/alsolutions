@@ -1,10 +1,4 @@
-exports.getTemplateNewMessage = (
-  contract,
-  customerPhoneNumber,
-  concatName,
-  conversationId,
-  Status,
-) => {
+exports.getTemplateNewMessage = (contract, customerPhoneNumber, concatName, conversationId, Status) => {
   return {
     contract: contract,
     messaging_product: "whatsapp",
@@ -13,7 +7,7 @@ exports.getTemplateNewMessage = (
     template: {
       name: "novo_chamado",
       language: {
-        code: "pt_BR",
+        code: "pt_BR"
       },
       components: [
         {
@@ -21,23 +15,23 @@ exports.getTemplateNewMessage = (
           parameters: [
             {
               type: "text",
-              text: concatName,
+              text: concatName
             },
             {
               type: "text",
-              text: conversationId,
+              text: conversationId
             },
             {
               type: "text",
-              text: Status,
+              text: Status
             },
             {
               type: "text",
-              text: new Date().toLocaleDateString("pt-BR"),
-            },
-          ],
-        },
-      ],
-    },
+              text: new Date().toLocaleDateString("pt-BR")
+            }
+          ]
+        }
+      ]
+    }
   };
 };

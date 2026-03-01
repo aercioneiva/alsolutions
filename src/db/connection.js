@@ -7,7 +7,7 @@ const db = knex({
     port: process.env.MYSQL_PORT || 3306,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASS,
-    database: process.env.MYSQL_DATABASE,
+    database: process.env.MYSQL_DATABASE
   },
   pool: {
     min: 2,
@@ -18,9 +18,9 @@ const db = knex({
       conn.query("SELECT 1", function (err) {
         done(err, conn);
       });
-    },
+    }
   },
-  asyncStackTraces: process.env.NODE_ENV !== "production",
+  asyncStackTraces: process.env.NODE_ENV !== "production"
 });
 
 if (process.env.NODE_ENV !== "production") {

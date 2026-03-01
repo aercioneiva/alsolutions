@@ -14,18 +14,13 @@ async function _enqueueMessage(message, metadata, contacts, contract) {
   const messageId = message.id;
 
   try {
-    const insertId = await _createMessage(
-      message,
-      metadata,
-      contacts,
-      contract,
-    );
+    const insertId = await _createMessage(message, metadata, contacts, contract);
 
     if (insertId > 0) {
       HandleMessageWhatsappQueue.add(
         "ProcessarMensagemWhatsapp",
         { message, metadata, contacts, contract, dbId: insertId },
-        { jobId: `${userId}-${messageId}` },
+        { jobId: `${userId}-${messageId}` }
       );
     }
   } catch (error) {
@@ -43,7 +38,7 @@ async function _createMessage(message, metadata, contacts, contract) {
       metadata.phone_number_id,
       JSON.stringify({ message, metadata, contacts }),
       "pending",
-      contract,
+      contract
     );
     return messageId;
   } catch (error) {
@@ -78,11 +73,7 @@ exports.webhook = async (req) => {
       console.log("Zap webhook message:", JSON.stringify(req.body, null, 2));
     }
 
-    if (
-      req.body.object !== "whatsapp_business_account" ||
-      !req.body.entry ||
-      !Array.isArray(req.body.entry)
-    ) {
+    if (req.body.object !== "whatsapp_business_account" || !req.body.entry || !Array.isArray(req.body.entry)) {
       return new Response(false, 200, "");
     }
 
@@ -110,12 +101,7 @@ exports.webhook = async (req) => {
           const value = change.value;
           if (value.messages) {
             for (const message of value.messages) {
-              await _enqueueMessage(
-                message,
-                value.metadata,
-                value.contacts,
-                contract,
-              );
+              await _enqueueMessage(message, value.metadata, value.contacts, contract);
             }
           }
         }

@@ -5,10 +5,7 @@ module.exports = class CompanyRepository {
 
   async find(contract) {
     try {
-      const [rows] = await db.raw(
-        `SELECT * FROM company WHERE contract=? AND status='A' LIMIT 1`,
-        [contract],
-      );
+      const [rows] = await db.raw(`SELECT * FROM company WHERE contract=? AND status='A' LIMIT 1`, [contract]);
 
       if (rows.length > 0) {
         return {
@@ -31,7 +28,7 @@ module.exports = class CompanyRepository {
           fluxo: rows[0].fluxo,
           topico: rows[0].topico,
           cause: rows[0].cause,
-          status: rows[0].status,
+          status: rows[0].status
         };
       }
 
@@ -66,7 +63,7 @@ module.exports = class CompanyRepository {
         fluxo: row.fluxo,
         topico: row.topico,
         cause: row.cause,
-        status: row.status,
+        status: row.status
       }));
     } catch (error) {
       console.error("Error in company repository findAll:", error);
@@ -76,8 +73,7 @@ module.exports = class CompanyRepository {
 
   async create(company) {
     try {
-      const { contract, account, inbox, downtime, system, name, id_whatsapp } =
-        company;
+      const { contract, account, inbox, downtime, system, name, id_whatsapp } = company;
 
       const [id] = await db
         .insert({
@@ -88,7 +84,7 @@ module.exports = class CompanyRepository {
           inbox,
           downtime,
           system,
-          status: "A",
+          status: "A"
         })
         .into("company");
 
@@ -116,10 +112,7 @@ module.exports = class CompanyRepository {
         return null; // Nenhum campo para atualizar
       }
 
-      const update = await db("company")
-        .where({ contract: contract })
-        .update(data)
-        .limit(1);
+      const update = await db("company").where({ contract: contract }).update(data).limit(1);
 
       return update || null;
     } catch (error) {

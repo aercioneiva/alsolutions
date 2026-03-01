@@ -4,11 +4,7 @@ exports.sendNotification = async (req, res) => {
   const { contract } = req.params;
   const { message, numbers } = req.query;
 
-  const sent = await chargeNotificationService.sendNotification(
-    contract,
-    message,
-    numbers,
-  );
+  const sent = await chargeNotificationService.sendNotification(contract, message, numbers);
 
   if (!sent) {
     return res.status(400).send();

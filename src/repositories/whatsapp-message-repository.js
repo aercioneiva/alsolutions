@@ -8,24 +8,18 @@ module.exports = class WhatsappMessageRepository {
       `INSERT IGNORE INTO whatsapp_messages 
          (message_id, user_id, phone_number, message_data, status, contract) 
          VALUES (?, ?, ?, ?, ?, ?)`,
-      [messageId, userId, phoneNumberId, messsage, status, contract],
+      [messageId, userId, phoneNumberId, messsage, status, contract]
     );
 
     return insertId;
   }
 
   async setSessionId(whatsappMessageID, idSession) {
-    await db.raw(`UPDATE whatsapp_messages SET session_id = ? WHERE id = ?`, [
-      idSession,
-      whatsappMessageID,
-    ]);
+    await db.raw(`UPDATE whatsapp_messages SET session_id = ? WHERE id = ?`, [idSession, whatsappMessageID]);
   }
 
   async getMessageBydSessionId(sessionId) {
-    const [rows] = await db.raw(
-      `SELECT * FROM whatsapp_messages WHERE session_id = ? ORDER BY id limit 1`,
-      [sessionId],
-    );
+    const [rows] = await db.raw(`SELECT * FROM whatsapp_messages WHERE session_id = ? ORDER BY id limit 1`, [sessionId]);
 
     return rows.map((row) => ({
       id: row.id,
@@ -35,13 +29,13 @@ module.exports = class WhatsappMessageRepository {
       message_data: row.message_data,
       status: row.status,
       contract: row.contract,
-      session_id: row.session_id,
+      session_id: row.session_id
     }));
   }
 
   async deleteOldMessages() {
     const [rows] = await db.raw(
-      `SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id`,
+      `SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id`
     );
 
     for (const row of rows) {

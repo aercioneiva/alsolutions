@@ -11,9 +11,9 @@ const fluxoAtendimentoRBX = {
           mensagem: "Olá, que bom que você entrou em contato com a Loga!",
           tipo: "text",
           proximoStep: "apresentacao",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     apresentacao: {
@@ -22,19 +22,18 @@ const fluxoAtendimentoRBX = {
           mensagem: "Eu sou a Lara, assistente virtual da RBXSoft!",
           tipo: "text",
           proximoStep: "solicitarDocumento",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     solicitarDocumento: {
       acao: async (dados, mensagem) => {
         if (!mensagem) {
           return {
-            mensagem:
-              "Preciso que você informe o CPF/CNPJ para o qual deseja atendimento",
+            mensagem: "Preciso que você informe o CPF/CNPJ para o qual deseja atendimento",
             tipo: "text",
-            aguardarResposta: true,
+            aguardarResposta: true
           };
         }
 
@@ -46,9 +45,9 @@ const fluxoAtendimentoRBX = {
           mensagem: null,
           tipo: null,
           proximoStep: "buscarCadastro",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     buscarCadastro: {
@@ -62,7 +61,7 @@ const fluxoAtendimentoRBX = {
             codigo: parseInt(response.result[0].Codigo),
             documento: response.result[0].CNPJ_CNPF,
             whatsapp: dados.usuarioId,
-            boletos: [],
+            boletos: []
           };
 
           return {
@@ -70,7 +69,7 @@ const fluxoAtendimentoRBX = {
             tipo: "text",
             proximoStep: "confirmarCadastro",
             aguardarResposta: false,
-            tempo: 4,
+            tempo: 4
           };
         }
 
@@ -78,21 +77,20 @@ const fluxoAtendimentoRBX = {
           mensagem: null,
           tipo: null,
           proximoStep: "erroCadastro",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     erroCadastro: {
       acao: async (dados, mensagem) => {
         return {
-          mensagem:
-            "Cadastro não encontrado. Por favor, informe outro CPF/CNPJ!",
+          mensagem: "Cadastro não encontrado. Por favor, informe outro CPF/CNPJ!",
           tipo: "text",
           proximoStep: "solicitarDocumento",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     confirmarCadastro: {
@@ -103,7 +101,7 @@ const fluxoAtendimentoRBX = {
           return {
             mensagem: `✅ Consegui localizar o cadastro em nome de ${nome}\n\nÉ para esse cadastro que você deseja atendimento?\n\n▶️ 1 - Sim\n▶️ 2 - Não`,
             tipo: "text",
-            aguardarResposta: true,
+            aguardarResposta: true
           };
         }
 
@@ -115,24 +113,23 @@ const fluxoAtendimentoRBX = {
             mensagem: null,
             tipo: null,
             proximoStep: "menuInicial",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao == 2) {
           return {
             mensagem: "Entendido. Por favor, informe outro CPF/CNPJ!",
             tipo: "text",
             proximoStep: "solicitarDocumento",
-            aguardarResposta: true,
+            aguardarResposta: true
           };
         }
 
         return {
-          mensagem:
-            "Opção inválida. Por favor, digite:\n▶️ 1 - Sim\n▶️ 2 - Não",
+          mensagem: "Opção inválida. Por favor, digite:\n▶️ 1 - Sim\n▶️ 2 - Não",
           tipo: "text",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     menuInicial: {
@@ -142,9 +139,9 @@ const fluxoAtendimentoRBX = {
             "Para seguir com o atendimento, escolha uma das opções abaixo\n\n▶️ 1 - Falar com financeiro\n▶️ 2 - Falar com suporte\n▶️ 3 - Falar com atendente\n▶️ 4 - Sair",
           tipo: "text",
           proximoStep: "confirmarMenuInicial",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     confirmarMenuInicial: {
@@ -156,17 +153,16 @@ const fluxoAtendimentoRBX = {
             mensagem: null,
             tipo: null,
             proximoStep: "menuFinanceiro",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao == 2 || opcao == 3) {
           const estabelecimentoAberto = validarHorarioAtendimento();
           if (!estabelecimentoAberto) {
             return {
-              mensagem:
-                "Estamos fechados no momento. Por favor, tente novamente mais tarde!",
+              mensagem: "Estamos fechados no momento. Por favor, tente novamente mais tarde!",
               tipo: "text",
               proximoStep: "finalizar",
-              aguardarResposta: false,
+              aguardarResposta: false
             };
           }
 
@@ -175,14 +171,14 @@ const fluxoAtendimentoRBX = {
             tipo: "text",
             abrirChamado: true,
             finalizar: true,
-            cliente: { codigo: dados.cliente.codigo, nome: dados.cliente.nome },
+            cliente: { codigo: dados.cliente.codigo, nome: dados.cliente.nome }
           };
         } else if (opcao == 4) {
           return {
             mensagem: null,
             tipo: null,
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         }
 
@@ -190,9 +186,9 @@ const fluxoAtendimentoRBX = {
           mensagem:
             "Opção inválida. Por favor, digite:\n▶️ 1 - Falar com financeiro\n▶️ 2 - Falar com suporte\n▶️ 3 - Falar com atendente\n▶️ 4 - Sair",
           tipo: "text",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     menuFinanceiro: {
@@ -202,9 +198,9 @@ const fluxoAtendimentoRBX = {
             "Escolha uma das opções abaixo\n\n▶️ 1 - Obter segunda via (Boleto em aberto)\n▶️ 2 - Obter Pix Copia e Cola (Boleto em aberto)\n▶️ 3 - Informar aviso de pagamento\n▶️ 4 - Voltar ao menu principal",
           tipo: "text",
           proximoStep: "confirmarMenuFinanceiro",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     confirmarMenuFinanceiro: {
@@ -220,7 +216,7 @@ const fluxoAtendimentoRBX = {
                 id: boleto.id,
                 due_date: boleto.due_date,
                 value_init: boleto.value_init,
-                pix_copy_paste: boleto.pix_copy_paste || null,
+                pix_copy_paste: boleto.pix_copy_paste || null
               };
             });
 
@@ -228,7 +224,7 @@ const fluxoAtendimentoRBX = {
               mensagem: `Encontrei ${boletos.length} boleto(s) em aberto para  ${dados.cliente.nome}`,
               tipo: "text",
               proximoStep: "menuBoletos",
-              aguardarResposta: false,
+              aguardarResposta: false
             };
           }
 
@@ -236,7 +232,7 @@ const fluxoAtendimentoRBX = {
             mensagem: `Não exitem boleto(s) em aberto para esse cadastro ${dados.cliente.nome}`,
             tipo: "text",
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao == 2) {
           const boletos = await buscarBoletosEmAberto(dados);
@@ -247,7 +243,7 @@ const fluxoAtendimentoRBX = {
                 id: boleto.id,
                 due_date: boleto.due_date,
                 value_init: boleto.value_init,
-                pix_copy_paste: boleto.pix_copy_paste || null,
+                pix_copy_paste: boleto.pix_copy_paste || null
               };
             });
 
@@ -255,7 +251,7 @@ const fluxoAtendimentoRBX = {
               mensagem: `Encontrei ${boletos.length} boleto(s) em aberto para  ${dados.cliente.nome}`,
               tipo: "text",
               proximoStep: "menuBoletosPIX",
-              aguardarResposta: false,
+              aguardarResposta: false
             };
           }
 
@@ -263,7 +259,7 @@ const fluxoAtendimentoRBX = {
             mensagem: `Não exitem boleto(s) em aberto para esse cadastro ${dados.cliente.nome}`,
             tipo: "text",
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao == 3) {
           const boletos = await buscarBoletosEmAberto(dados);
@@ -274,7 +270,7 @@ const fluxoAtendimentoRBX = {
                 id: boleto.id,
                 due_date: boleto.due_date,
                 value_init: boleto.value_init,
-                pix_copy_paste: boleto.pix_copy_paste || null,
+                pix_copy_paste: boleto.pix_copy_paste || null
               };
             });
 
@@ -282,7 +278,7 @@ const fluxoAtendimentoRBX = {
               mensagem: `Encontrei ${boletos.length} boleto(s) em aberto para  ${dados.cliente.nome}`,
               tipo: "text",
               proximoStep: "menuBoletosAviso",
-              aguardarResposta: false,
+              aguardarResposta: false
             };
           }
 
@@ -290,14 +286,14 @@ const fluxoAtendimentoRBX = {
             mensagem: `Não exitem boleto(s) em aberto para esse cadastro ${dados.cliente.nome}`,
             tipo: "text",
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao == 4) {
           return {
             mensagem: null,
             tipo: null,
             proximoStep: "menuInicial",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         }
 
@@ -305,9 +301,9 @@ const fluxoAtendimentoRBX = {
           mensagem:
             "Opção inválida. Por favor, digite:\n▶️ 1 - Obter segunda via (Boleto em aberto)\n▶️ 2 - Obter Pix Copia e Cola (Boleto em aberto)\n▶️ 3 - Informar aviso de pagamento\n▶️ 4 - Voltar ao menu principal",
           tipo: "text",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     menuBoletos: {
@@ -328,9 +324,9 @@ const fluxoAtendimentoRBX = {
           mensagem: `Escolha um do(s) boleto(s) abaixo\n\n${boletos}`,
           tipo: "text",
           proximoStep: "confirmarBoletos",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     confirmarBoletos: {
@@ -342,7 +338,7 @@ const fluxoAtendimentoRBX = {
             mensagem: null,
             tipo: null,
             proximoStep: "menuFinanceiro",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           const boleto = dados.cliente.boletos[opcao - 1];
@@ -354,7 +350,7 @@ const fluxoAtendimentoRBX = {
               tipo: "embed",
               proximoStep: "finalizar",
               aguardarResposta: false,
-              tempo: 5,
+              tempo: 5
             };
           }
 
@@ -362,7 +358,7 @@ const fluxoAtendimentoRBX = {
             mensagem: `Ocorreu um erro ao tentar recuperar o pdf, tente novamente mais tarde!`,
             tipo: "text",
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         }
 
@@ -370,9 +366,9 @@ const fluxoAtendimentoRBX = {
           mensagem: "Opção inválida",
           tipo: "text",
           proximoStep: "menuBoletos",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     menuBoletosPIX: {
@@ -393,9 +389,9 @@ const fluxoAtendimentoRBX = {
           mensagem: `Escolha um do(s) boleto(s) abaixo\n\n${boletos}`,
           tipo: "text",
           proximoStep: "confirmarBoletosPIX",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     confirmarBoletosPIX: {
@@ -407,7 +403,7 @@ const fluxoAtendimentoRBX = {
             mensagem: null,
             tipo: null,
             proximoStep: "menuFinanceiro",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           const boleto = dados.cliente.boletos[opcao - 1];
@@ -417,7 +413,7 @@ const fluxoAtendimentoRBX = {
               mensagem: boleto.pix_copy_paste,
               tipo: "text",
               proximoStep: "finalizar",
-              aguardarResposta: false,
+              aguardarResposta: false
             };
           }
 
@@ -427,7 +423,7 @@ const fluxoAtendimentoRBX = {
               mensagem: pixCopiaCola,
               tipo: "text",
               proximoStep: "finalizar",
-              aguardarResposta: false,
+              aguardarResposta: false
             };
           }
 
@@ -435,7 +431,7 @@ const fluxoAtendimentoRBX = {
             mensagem: `Ocorreu um erro ao tentar recuperar o PIX, tente novamente mais tarde!`,
             tipo: "text",
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         }
 
@@ -443,9 +439,9 @@ const fluxoAtendimentoRBX = {
           mensagem: "Opção inválida",
           tipo: "text",
           proximoStep: "menuBoletos",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     menuBoletosAviso: {
@@ -466,9 +462,9 @@ const fluxoAtendimentoRBX = {
           mensagem: `Escolha um do(s) boleto(s) abaixo\n\n${boletos}`,
           tipo: "text",
           proximoStep: "confirmarBoletosAviso",
-          aguardarResposta: true,
+          aguardarResposta: true
         };
-      },
+      }
     },
 
     confirmarBoletosAviso: {
@@ -480,7 +476,7 @@ const fluxoAtendimentoRBX = {
             mensagem: null,
             tipo: null,
             proximoStep: "menuFinanceiro",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         } else if (opcao > 0 && opcao <= dados.cliente.boletos.length) {
           dados.cliente.boletoSelecionado = dados.cliente.boletos[opcao - 1];
@@ -489,7 +485,7 @@ const fluxoAtendimentoRBX = {
             mensagem: `Informe a data de pagamento no formato 00/00/0000`,
             tipo: "text",
             proximoStep: "avisoPagamento",
-            aguardarResposta: true,
+            aguardarResposta: true
           };
         }
 
@@ -497,19 +493,18 @@ const fluxoAtendimentoRBX = {
           mensagem: "Opção inválida",
           tipo: "text",
           proximoStep: "menuBoletos",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     avisoPagamento: {
       acao: async (dados, mensagem) => {
         if (!mensagem) {
           return {
-            mensagem:
-              "Preciso que você Informe a data de pagamento no formato 00/00/0000",
+            mensagem: "Preciso que você Informe a data de pagamento no formato 00/00/0000",
             tipo: "text",
-            aguardarResposta: true,
+            aguardarResposta: true
           };
         }
 
@@ -524,22 +519,20 @@ const fluxoAtendimentoRBX = {
 
         if (resposta) {
           return {
-            mensagem:
-              "Seu pagamento foi informado com sucesso, em breve seu sinal deve voltar ao normal",
+            mensagem: "Seu pagamento foi informado com sucesso, em breve seu sinal deve voltar ao normal",
             tipo: "text",
             proximoStep: "finalizar",
-            aguardarResposta: false,
+            aguardarResposta: false
           };
         }
 
         return {
-          mensagem:
-            "Não foi possível informar o pagamento, tente novamente mais tarde!",
+          mensagem: "Não foi possível informar o pagamento, tente novamente mais tarde!",
           tipo: "text",
           proximoStep: "finalizar",
-          aguardarResposta: false,
+          aguardarResposta: false
         };
-      },
+      }
     },
 
     finalizar: {
@@ -547,11 +540,11 @@ const fluxoAtendimentoRBX = {
         return {
           mensagem: "Obrigada pelo contato, até mais!",
           tipo: "text",
-          finalizar: true,
+          finalizar: true
         };
-      },
-    },
-  },
+      }
+    }
+  }
 };
 
 async function buscarCadastroPorDocumento(dados) {
@@ -560,16 +553,16 @@ async function buscarCadastroPorDocumento(dados) {
       method: "POST",
       url: `${dados.company.host}/routerbox/ws/rbx_server_json.php`,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       data: {
         ConsultaClientes: {
           Autenticacao: {
-            ChaveIntegracao: dados.company.key_integration,
+            ChaveIntegracao: dados.company.key_integration
           },
-          Filtro: `CNPJ_CNPF='${dados.documento}'`,
-        },
-      },
+          Filtro: `CNPJ_CNPF='${dados.documento}'`
+        }
+      }
     });
 
     return res.data;
@@ -586,21 +579,18 @@ async function salvarContato({ contract, cliente }) {
       method: "POST",
       url: `https://alsolutions.onrender.com/api/v1/contact`,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       data: {
         contact: {
           contract: contract,
           number: cliente.whatsapp,
-          name: cliente.nome,
-        },
-      },
+          name: cliente.nome
+        }
+      }
     });
   } catch (error) {
-    console.log(
-      `[SERVICE-ALSOLUTIONS] Não conseguiu cadastrar o contato`,
-      error,
-    );
+    console.log(`[SERVICE-ALSOLUTIONS] Não conseguiu cadastrar o contato`, error);
   }
 }
 
@@ -611,22 +601,19 @@ async function buscarBoletosEmAberto(dados) {
       url: `${dados.company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: dados.company.key_integration,
+        authentication_key: dados.company.key_integration
       },
       data: {
         get_unpaid_document: {
           customer_id: dados.cliente.codigo,
-          account_number: dados.company.rbx_account,
-        },
-      },
+          account_number: dados.company.rbx_account
+        }
+      }
     });
 
     return response.data.result.length > 0 ? response.data.result : null;
   } catch (error) {
-    console.log(
-      `[SERVICE-RBXSOFT] Não conseguiu buscar os boletos em aberto`,
-      error,
-    );
+    console.log(`[SERVICE-RBXSOFT] Não conseguiu buscar os boletos em aberto`, error);
   }
 
   return null;
@@ -634,9 +621,7 @@ async function buscarBoletosEmAberto(dados) {
 
 function validarHorarioAtendimento() {
   let dataAtual = new Date();
-  dataAtual = new Date(
-    dataAtual.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
-  );
+  dataAtual = new Date(dataAtual.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }));
 
   let diaAtual = dataAtual.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
   let horaAtual = dataAtual.getHours();
@@ -644,18 +629,12 @@ function validarHorarioAtendimento() {
 
   // Segunda a Sexta
   if (diaAtual >= 1 && diaAtual <= 5) {
-    if (
-      horaAtual >= 8 &&
-      (horaAtual < 18 || (horaAtual === 18 && minutoAtual === 0))
-    ) {
+    if (horaAtual >= 8 && (horaAtual < 18 || (horaAtual === 18 && minutoAtual === 0))) {
       return true;
     }
   } else if (diaAtual === 6) {
     // Sábado
-    if (
-      horaAtual >= 8 &&
-      (horaAtual < 12 || (horaAtual === 12 && minutoAtual === 0))
-    ) {
+    if (horaAtual >= 8 && (horaAtual < 12 || (horaAtual === 12 && minutoAtual === 0))) {
       return true;
     }
   }
@@ -670,21 +649,18 @@ async function buscarBoletoPDF(company, sequencia) {
       url: `${company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: company.key_integration,
+        authentication_key: company.key_integration
       },
       data: {
         get_banking_billet: {
-          document_id: sequencia,
-        },
-      },
+          document_id: sequencia
+        }
+      }
     });
 
     return response.data.result.banking_billet_link || null;
   } catch (error) {
-    console.log(
-      `[SERVICE-RBXSOFT] Não conseguiu buscar os boletos em aberto`,
-      error,
-    );
+    console.log(`[SERVICE-RBXSOFT] Não conseguiu buscar os boletos em aberto`, error);
   }
 
   return null;
@@ -697,14 +673,14 @@ async function buscarBoletoPIX(company, sequencia) {
       url: `${company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: company.key_integration,
+        authentication_key: company.key_integration
       },
       data: {
         get_pix_copia_cola: {
           banking_billet_id: sequencia,
-          send_pix_copia_cola: false,
-        },
-      },
+          send_pix_copia_cola: false
+        }
+      }
     });
 
     return response.data.result || null;
@@ -722,15 +698,15 @@ async function informarPagamento(dados, dataPagamento) {
       url: `${dados.company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: dados.company.key_integration,
+        authentication_key: dados.company.key_integration
       },
       data: {
         send_payment_notification: {
           document_id: dados.cliente.boletoSelecionado.id,
           payment_date: dataPagamento,
-          customer_id: dados.cliente.codigo,
-        },
-      },
+          customer_id: dados.cliente.codigo
+        }
+      }
     });
 
     return response.data.result;
@@ -742,5 +718,5 @@ async function informarPagamento(dados, dataPagamento) {
 }
 
 module.exports = {
-  fluxoAtendimentoRBX,
+  fluxoAtendimentoRBX
 };

@@ -16,9 +16,9 @@ class FlowEngine {
         fluxoAtual: this.fluxo.nome,
         stepAtual: this.fluxo.stepInicial,
         dados: { contract: company.contract, usuarioId, company },
-        historico: [],
+        historico: []
       },
-      60 * 60 * 24,
+      60 * 60 * 24
     );
 
     return this.executarStep(id);
@@ -32,13 +32,13 @@ class FlowEngine {
         mensagens: [
           {
             mensagem: "Sessão não encontrada. Inicie um novo atendimento.",
-            tipo: "text",
-          },
+            tipo: "text"
+          }
         ],
         finalizado: true,
         aguardandoResposta: false,
         abrir_chamado: false,
-        cliente: null,
+        cliente: null
       };
     }
 
@@ -56,20 +56,16 @@ class FlowEngine {
         fluxoAtual: sessao.fluxoAtual,
         stepAtual: sessao.stepAtual,
         dados: sessao.dados,
-        historico: sessao.historico,
+        historico: sessao.historico
       },
-      60 * 60 * 24,
+      60 * 60 * 24
     );
 
     // Executa o step atual com a mensagem do usuário
     return await this.executarStep(usuarioId, mensagem);
   }
 
-  async executarStep(
-    usuarioId,
-    mensagemUsuario = null,
-    _mensagensAcumuladas = [],
-  ) {
+  async executarStep(usuarioId, mensagemUsuario = null, _mensagensAcumuladas = []) {
     const sessao = await Cache.get(usuarioId);
 
     if (!sessao) {
@@ -77,13 +73,13 @@ class FlowEngine {
         mensagens: [
           {
             mensagem: "Sessão não encontrada. Inicie um novo atendimento.",
-            tipo: "text",
-          },
+            tipo: "text"
+          }
         ],
         finalizado: true,
         aguardandoResposta: false,
         abrir_chamado: false,
-        cliente: null,
+        cliente: null
       };
     }
 
@@ -95,13 +91,13 @@ class FlowEngine {
           ..._mensagensAcumuladas,
           {
             mensagem: "Step não encontrado. Encerrando atendimento.",
-            tipo: "text",
-          },
+            tipo: "text"
+          }
         ],
         finalizado: true,
         aguardandoResposta: false,
         abrir_chamado: false,
-        cliente: null,
+        cliente: null
       };
     }
 
@@ -114,7 +110,7 @@ class FlowEngine {
       _mensagensAcumuladas.push({
         tipo: resultado.tipo || null,
         mensagem: resultado.mensagem,
-        tempo: resultado.tempo || 0,
+        tempo: resultado.tempo || 0
       });
     }
 
@@ -126,7 +122,7 @@ class FlowEngine {
         finalizado: true,
         aguardandoResposta: false,
         abrir_chamado: resultado.abrirChamado || false,
-        cliente: resultado.cliente || null,
+        cliente: resultado.cliente || null
       };
     }
 
@@ -145,9 +141,9 @@ class FlowEngine {
         fluxoAtual: sessao.fluxoAtual,
         stepAtual: sessao.stepAtual,
         dados: sessao.dados,
-        historico: sessao.historico,
+        historico: sessao.historico
       },
-      60 * 60 * 24,
+      60 * 60 * 24
     );
 
     // Se não aguarda resposta, continua executando e acumulando mensagens
@@ -161,7 +157,7 @@ class FlowEngine {
       finalizado: false,
       aguardandoResposta: resultado.aguardarResposta,
       abrir_chamado: false,
-      cliente: null,
+      cliente: null
     };
   }
 
@@ -172,5 +168,5 @@ class FlowEngine {
 
 // Exporta para uso externo
 module.exports = {
-  FlowEngine,
+  FlowEngine
 };

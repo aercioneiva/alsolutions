@@ -42,8 +42,8 @@ const chatWootWorker = new Worker(
   },
   {
     connection: createRedisConnection(),
-    concurrency: 5, // Processa até 5 jobs simultaneamente
-  },
+    concurrency: 5 // Processa até 5 jobs simultaneamente
+  }
 );
 
 chatWootWorker.on("failed", (job, err) => {
@@ -65,9 +65,9 @@ const sendWhatsappWorker = new Worker(
     connection: createRedisConnection(),
     concurrency: 10, // Processa até 10 jobs simultaneamente
     limiter: {
-      max: 100, // Máximo 100 jobs
-    },
-  },
+      max: 100 // Máximo 100 jobs
+    }
+  }
 );
 
 const whatsappWorker = new Worker(
@@ -91,7 +91,7 @@ const whatsappWorker = new Worker(
         `UPDATE whatsapp_messages 
          SET status = ?, attempts = attempts + 1 
          WHERE id = ?`,
-        ["processing", dbId],
+        ["processing", dbId]
       );
 
       await HandleMessageWhatsapp.handle(job.data, job);
@@ -100,7 +100,7 @@ const whatsappWorker = new Worker(
         `UPDATE whatsapp_messages 
          SET status = ?, processed_at = NOW() 
          WHERE id = ?`,
-        ["completed", dbId],
+        ["completed", dbId]
       );
     } catch (error) {
       Logger.error(`❌ Erro ao processar mensagem whatsapp${message.id}:`);
@@ -109,7 +109,7 @@ const whatsappWorker = new Worker(
         `UPDATE whatsapp_messages 
          SET status = ?, error_message = ? 
          WHERE id = ?`,
-        ["failed", error.message, dbId],
+        ["failed", error.message, dbId]
       );
     } finally {
       userLocks.remove(userId); // Libera o lock para esse usuário, permitindo que a próxima mensagem seja processada
@@ -119,9 +119,9 @@ const whatsappWorker = new Worker(
     connection: createRedisConnection(),
     concurrency: 10, // Processa até 10 jobs simultaneamente
     limiter: {
-      max: 100, // Máximo 100 jobs
-    },
-  },
+      max: 100 // Máximo 100 jobs
+    }
+  }
 );
 
 whatsappWorker.on("failed", (job, err) => {

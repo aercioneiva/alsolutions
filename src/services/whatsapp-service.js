@@ -14,17 +14,12 @@ exports.sendMessageWhatsapp = async (data) => {
   const whatsapp = {
     id: data.id_whatsapp,
     version: data.version_whatsapp,
-    token: data.token_whatsapp,
+    token: data.token_whatsapp
   };
   await enviarMensagemZapMeta(whatsapp, data);
 };
 
-exports.processMessageWhatsapp = async ({
-  message,
-  contacts,
-  contract,
-  dbId: whatsappMessageID,
-}) => {
+exports.processMessageWhatsapp = async ({ message, contacts, contract, dbId: whatsappMessageID }) => {
   let session;
   let messagem = "";
   let conversationId = 0;
@@ -32,7 +27,7 @@ exports.processMessageWhatsapp = async ({
   let chatwoot = {
     account: "",
     inbox: "",
-    token: "",
+    token: ""
   };
   let contactPhoneNumber;
   let contactName;
@@ -40,7 +35,7 @@ exports.processMessageWhatsapp = async ({
   const whatsapp = {
     id: "",
     version: "",
-    token: "",
+    token: ""
   };
 
   const cacheCompany = await Cache.get(contract);
@@ -71,7 +66,7 @@ exports.processMessageWhatsapp = async ({
       host: responseCompany.host,
       fluxo: responseCompany.fluxo,
       topico: responseCompany.topico,
-      cause: responseCompany.cause,
+      cause: responseCompany.cause
     });
 
     system = responseCompany.system;
@@ -122,7 +117,7 @@ exports.processMessageWhatsapp = async ({
         type: "content",
         file: null,
         content: messagem,
-        fileName: null,
+        fileName: null
       };
     } else {
       const { type, audio, video, document, sticker, image } = message;
@@ -141,22 +136,7 @@ exports.processMessageWhatsapp = async ({
         fileName = "document." + document?.filename;
 
         const ext = document?.filename.split(".").pop();
-        const extensionsNotAllowed = [
-          "php",
-          "exe",
-          "js",
-          "sh",
-          "bat",
-          "cmd",
-          "com",
-          "scr",
-          "py",
-          "jar",
-          "vbs",
-          "msi",
-          "reg",
-          "dll",
-        ];
+        const extensionsNotAllowed = ["php", "exe", "js", "sh", "bat", "cmd", "com", "scr", "py", "jar", "vbs", "msi", "reg", "dll"];
         if (extensionsNotAllowed.includes(ext)) {
           return;
         }
@@ -171,7 +151,7 @@ exports.processMessageWhatsapp = async ({
         type: "file",
         file: file.toString("base64"),
         content: "",
-        fileName: fileName,
+        fileName: fileName
       };
     }
 
@@ -195,41 +175,25 @@ exports.processMessageWhatsapp = async ({
     idSession = await sessionService.createSession({
       contract: contract,
       number: contactPhoneNumber,
-      session: resFlow.id,
+      session: resFlow.id
     });
 
     if (!idSession) {
       return;
     }
 
-    await processMessageFlow(
-      resFlow,
-      contactPhoneNumber,
-      idSession,
-      chatwoot,
-      contract,
-      whatsapp,
-      whatsappMessageID,
-    );
+    await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp, whatsappMessageID);
   } else {
     const resFlow = await flowService.sendMessageFlow(company, {
       session: session,
-      message: messagem,
+      message: messagem
     });
 
     if (!resFlow) {
       return;
     }
 
-    await processMessageFlow(
-      resFlow,
-      contactPhoneNumber,
-      idSession,
-      chatwoot,
-      contract,
-      whatsapp,
-      whatsappMessageID,
-    );
+    await processMessageFlow(resFlow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp, whatsappMessageID);
 
     //atualiza a data da da ultima mensagem enviada pelo usuario
     sessionService.updateSessionLastMessage(idSession);
@@ -242,15 +206,7 @@ exports.processMessageWhatsapp = async ({
   return;
 };
 
-async function processMessageFlow(
-  flow,
-  contactPhoneNumber,
-  idSession,
-  chatwoot,
-  contract,
-  whatsapp,
-  whatsappMessageID,
-) {
+async function processMessageFlow(flow, contactPhoneNumber, idSession, chatwoot, contract, whatsapp, whatsappMessageID) {
   const abrirChatWoot = flow.abrir_chamado || false;
 
   for (let i = 0; i < flow.mensagens.length; i++) {
@@ -261,9 +217,9 @@ async function processMessageFlow(
         messaging_product: "whatsapp",
         to: contactPhoneNumber,
         text: {
-          body: message.mensagem,
+          body: message.mensagem
         },
-        contract: contract,
+        contract: contract
       });
     }
 
@@ -274,9 +230,9 @@ async function processMessageFlow(
         type: "document",
         document: {
           link: message.mensagem,
-          filename: message.mensagem.split("/")[5] || "Boleto.pdf",
+          filename: message.mensagem.split("/")[5] || "Boleto.pdf"
         },
-        contract: contract,
+        contract: contract
       };
 
       await enviarMensagemZapMeta(whatsapp, data);
@@ -289,10 +245,7 @@ async function processMessageFlow(
     try {
       await whatsappMessageService.setSessionId(whatsappMessageID, idSession);
     } catch (error) {
-      console.log(
-        "Erro ao atualizar a mensagem do WhatsApp com o ID da sessão:",
-        error,
-      );
+      console.log("Erro ao atualizar a mensagem do WhatsApp com o ID da sessão:", error);
     }
   }
 
@@ -300,14 +253,10 @@ async function processMessageFlow(
     const customAttributes = {
       number: contactPhoneNumber,
       codigo_cliente: flow.cliente.codigo,
-      nome_cliente: flow.cliente.nome,
+      nome_cliente: flow.cliente.nome
     };
     const name = contactPhoneNumber;
-    const conversationId = await chatwootService.startChatwoot(
-      chatwoot,
-      name,
-      customAttributes,
-    );
+    const conversationId = await chatwootService.startChatwoot(chatwoot, name, customAttributes);
 
     if (conversationId) {
       await contactService.updateLastMessage(contactPhoneNumber);
@@ -315,22 +264,21 @@ async function processMessageFlow(
         type: "content",
         file: "",
         content: "[SYSTEM] Cliente Solicitando Atendimento",
-        fileName: "",
+        fileName: ""
       };
 
       await enviarMensagemChatWoot(chatwoot, {
         data: formData,
-        conversationId,
+        conversationId
       });
 
       //atualiza para conversa ativa
       await sessionService.updateSession(idSession, {
-        conversation: conversationId,
+        conversation: conversationId
       });
 
       try {
-        const whatsappMessages =
-          await whatsappMessageService.getMessageBydSessionId(idSession);
+        const whatsappMessages = await whatsappMessageService.getMessageBydSessionId(idSession);
         for (const whatsappMessage of whatsappMessages) {
           const { message } = JSON.parse(whatsappMessage.message_data);
 
@@ -339,14 +287,14 @@ async function processMessageFlow(
               type: "content",
               file: null,
               content: message.text.body,
-              fileName: null,
+              fileName: null
             };
           } else if (message.type == "button") {
             formData = {
               type: "content",
               file: null,
               content: message.button.body,
-              fileName: null,
+              fileName: null
             };
           } else {
             const { type, audio, video, document, sticker, image } = message;
@@ -365,22 +313,7 @@ async function processMessageFlow(
               fileName = "document." + document.filename;
 
               const ext = document.filename.split(".").pop();
-              const extensionsNotAllowed = [
-                "php",
-                "exe",
-                "js",
-                "sh",
-                "bat",
-                "cmd",
-                "com",
-                "scr",
-                "py",
-                "jar",
-                "vbs",
-                "msi",
-                "reg",
-                "dll",
-              ];
+              const extensionsNotAllowed = ["php", "exe", "js", "sh", "bat", "cmd", "com", "scr", "py", "jar", "vbs", "msi", "reg", "dll"];
               if (extensionsNotAllowed.includes(ext)) {
                 return;
               }
@@ -395,19 +328,17 @@ async function processMessageFlow(
               type: "file",
               file: file.toString("base64"),
               content: "",
-              fileName: fileName,
+              fileName: fileName
             };
           }
 
           await enviarMensagemChatWoot(chatwoot, {
             data: formData,
-            conversationId,
+            conversationId
           });
         }
       } catch (error) {
-        Logger.error(
-          `[WHATSAPP] Erro ao enviar mensagens do WhatsApp para o ChatWoot`,
-        );
+        Logger.error(`[WHATSAPP] Erro ao enviar mensagens do WhatsApp para o ChatWoot`);
       }
     } else {
       //nao conseguiu abri o chamado

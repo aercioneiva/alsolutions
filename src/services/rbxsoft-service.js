@@ -12,7 +12,7 @@ exports.abrirAtendimento = async (company, data) => {
     Cliente: data.customer,
     Prioridade: "1",
     Situacao: "A",
-    Assunto: "Chat bot",
+    Assunto: "Chat bot"
   };
 
   if (company.fluxo > 0) {
@@ -27,16 +27,16 @@ exports.abrirAtendimento = async (company, data) => {
       method: "POST",
       url: `${company.host}/routerbox/ws/rbx_server_json.php`,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       data: {
         AtendimentoCadastro: {
           Autenticacao: {
-            ChaveIntegracao: company.key_integration,
+            ChaveIntegracao: company.key_integration
           },
-          DadosAtendimento: dadosAtendimento,
-        },
-      },
+          DadosAtendimento: dadosAtendimento
+        }
+      }
     });
 
     return res.data;
@@ -54,18 +54,16 @@ exports.incluirMensagemAtendimento = async (company, messages) => {
       url: `${company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: company.key_integration,
+        authentication_key: company.key_integration
       },
       data: {
-        chat_messages: messages,
-      },
+        chat_messages: messages
+      }
     });
 
     return res.data;
   } catch (error) {
-    Logger.error(
-      `[SERVICE-RBXSOFT] Não conseguiu incuir as mensagens no atendimento`,
-    );
+    Logger.error(`[SERVICE-RBXSOFT] Não conseguiu incuir as mensagens no atendimento`);
     Logger.info(error);
     Logger.error({ chat_messages: messages });
   }
@@ -79,20 +77,18 @@ exports.gerarPesquisaSatisfacao = async (company, ticket) => {
       url: `${company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: company.key_integration,
+        authentication_key: company.key_integration
       },
       data: {
         generate_questionare_link: {
-          ticket: ticket,
-        },
-      },
+          ticket: ticket
+        }
+      }
     });
 
     return res.data;
   } catch (error) {
-    Logger.error(
-      `[SERVICE-RBXSOFT] Não conseguiu gerar o link da pesquisa de satisfação`,
-    );
+    Logger.error(`[SERVICE-RBXSOFT] Não conseguiu gerar o link da pesquisa de satisfação`);
   }
   return null;
 };
@@ -108,7 +104,7 @@ exports.encerrarAtendimento = async (company, ticket) => {
       url: `${company.host}/routerbox/ws_json/ws_json.php`,
       headers: {
         "Content-Type": "application/json",
-        authentication_key: company.key_integration,
+        authentication_key: company.key_integration
       },
       data: {
         ticket_finish: {
@@ -116,9 +112,9 @@ exports.encerrarAtendimento = async (company, ticket) => {
           cause_id: company.cause,
           solution: "Encerrado pelo ChatBot.",
           datetime: new Date().toISOString().slice(0, 19).replace("T", " "),
-          user: company.rbx_user,
-        },
-      },
+          user: company.rbx_user
+        }
+      }
     });
   } catch (error) {
     Logger.error(`[SERVICE-RBXSOFT] Não conseguiu ecerrar o atendimento`);

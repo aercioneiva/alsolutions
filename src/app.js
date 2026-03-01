@@ -12,12 +12,7 @@ const errorHandler = require("./middleware/error-handler");
 const basicAuth = require("./middleware/basic-auth");
 
 const routes = require("./routes");
-const {
-  ZapNotificationsQueue,
-  HandleMessageChatWootQueue,
-  HandleMessageWhatsappQueue,
-  ZapQueue,
-} = require("./libs/queue");
+const { ZapNotificationsQueue, HandleMessageChatWootQueue, HandleMessageWhatsappQueue, ZapQueue } = require("./libs/queue");
 
 const app = express();
 
@@ -29,9 +24,9 @@ createBullBoard({
     new BullMQAdapter(HandleMessageWhatsappQueue),
     new BullMQAdapter(ZapQueue),
     new BullMQAdapter(ZapNotificationsQueue),
-    new BullMQAdapter(HandleMessageChatWootQueue),
+    new BullMQAdapter(HandleMessageChatWootQueue)
   ],
-  serverAdapter,
+  serverAdapter
 });
 
 app.use(helmet());
@@ -44,9 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", routes);
 app.get("/test", (req, res) => res.status(200).send("OK"));
-app.all("*", (req, res) =>
-  res.status(404).send(`Can't find ${req.originalUrl} on this server!`),
-);
+app.all("*", (req, res) => res.status(404).send(`Can't find ${req.originalUrl} on this server!`));
 
 app.use(errorHandler);
 

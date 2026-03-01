@@ -6,23 +6,20 @@ const CONSTANTS = {
   EVENTS: {
     MESSAGE_CREATED: "message_created",
     CONVERSATION_STATUS_CHANGED: "conversation_status_changed",
-    CONVERSATION_CREATED: "conversation_created",
+    CONVERSATION_CREATED: "conversation_created"
   },
   MESSAGE_TYPES: {
-    OUTGOING: "outgoing",
+    OUTGOING: "outgoing"
   },
   CONVERSATION_STATUS: {
     RESOLVED: "resolved",
-    OPEN: "open",
-  },
+    OPEN: "open"
+  }
 };
 
 exports.webhook = async (req) => {
   if (process.env.NODE_ENV === "development") {
-    console.log(
-      "[CHATWOOT] webhook message:",
-      JSON.stringify(req.body, null, 1),
-    );
+    console.log("[CHATWOOT] webhook message:", JSON.stringify(req.body, null, 1));
   }
 
   try {
@@ -32,32 +29,28 @@ exports.webhook = async (req) => {
     const status = req.body.status;
 
     switch (true) {
-      case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED &&
-        req.body.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
+      case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED && req.body.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
         HandleMessageChatWootQueue.add("ProcessarMensagemChatWoot", {
           message: req.body,
-          contract,
+          contract
         });
         return new Response(true, 200, "");
-      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED &&
-        status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
         HandleMessageChatWootQueue.add("ProcessarMensagemChatWoot", {
           message: req.body,
-          contract,
+          contract
         });
         return new Response(true, 200, "");
-      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED &&
-        status === CONSTANTS.CONVERSATION_STATUS.OPEN:
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
         HandleMessageChatWootQueue.add("ProcessarMensagemChatWoot", {
           message: req.body,
-          contract,
+          contract
         });
         return new Response(true, 200, "");
-      case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED &&
-        status === CONSTANTS.CONVERSATION_STATUS.OPEN:
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
         HandleMessageChatWootQueue.add("ProcessarMensagemChatWoot", {
           message: req.body,
-          contract,
+          contract
         });
         return new Response(true, 200, "");
       default:

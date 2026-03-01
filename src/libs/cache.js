@@ -61,5 +61,5 @@ module.exports = {
   get,
   del,
   exists,
-  expire,
+  expire
 };

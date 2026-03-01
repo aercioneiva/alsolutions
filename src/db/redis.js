@@ -11,7 +11,7 @@ const redisOptions = {
     return Math.max(Math.min(Math.exp(times), 20000), 1000);
   },
   connectTimeout: 10000,
-  lazyConnect: true,
+  lazyConnect: true
 };
 
 const createRedisConnection = () => {

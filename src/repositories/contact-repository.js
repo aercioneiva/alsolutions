@@ -11,7 +11,7 @@ module.exports = class ContactRepository {
                                          WHERE number=? AND contract=?
                                       ORDER BY Id DESC 
                                          LIMIT 1`,
-        [number, contract],
+        [number, contract]
       );
 
       if (rows.length > 0) {
@@ -22,7 +22,7 @@ module.exports = class ContactRepository {
           name: rows[0].name,
           createdAt: rows[0].created_at,
           updatedAt: rows[0].updated_at,
-          lastMessage: rows[0].last_message,
+          lastMessage: rows[0].last_message
         };
       }
 
@@ -41,7 +41,7 @@ module.exports = class ContactRepository {
         .insert({
           contract,
           number,
-          name: name.replace("'", "").replace('"', "").trim(),
+          name: name.replace("'", "").replace('"', "").trim()
         })
         .into("contact");
 
@@ -61,7 +61,7 @@ module.exports = class ContactRepository {
           contact_id: contactId,
           name: name.replace("'", "").replace('"', "").trim(),
           document: document,
-          code: customer_code,
+          code: customer_code
         })
         .into("contact_customer");
 
@@ -74,10 +74,7 @@ module.exports = class ContactRepository {
 
   async delete(contact) {
     try {
-      const result = await db("contact")
-        .where({ contract: contact.contract, number: contact.number })
-        .delete()
-        .limit(1);
+      const result = await db("contact").where({ contract: contact.contract, number: contact.number }).delete().limit(1);
 
       return result > 0;
     } catch (error) {

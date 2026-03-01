@@ -5,14 +5,14 @@ const { Queue } = require("bullmq");
 const { createRedisConnection } = require("../db/redis");
 
 exports.HandleMessageWhatsappQueue = new Queue("ProcessarMensagemWhatsapp", {
-  connection: createRedisConnection(),
+  connection: createRedisConnection()
 });
 exports.ZapQueue = new Queue("EnviarMensagemWhatsapp", {
-  connection: createRedisConnection(),
+  connection: createRedisConnection()
 });
 exports.ZapNotificationsQueue = new Queue("EnviarMensagemZapNotifications", {
-  connection: createRedisConnection(),
+  connection: createRedisConnection()
 });
 exports.HandleMessageChatWootQueue = new Queue("ProcessarMensagemChatWoot", {
-  connection: createRedisConnection(),
+  connection: createRedisConnection()
 });

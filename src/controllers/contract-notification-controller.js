@@ -5,13 +5,7 @@ exports.sendNotification = async (req, res) => {
   const { Cliente, Contrato, Evento } = req.body;
   const { number } = req.query;
 
-  const sent = await contractNotificationService.sendNotification(
-    contract,
-    Cliente,
-    Contrato,
-    Evento,
-    number,
-  );
+  const sent = await contractNotificationService.sendNotification(contract, Cliente, Contrato, Evento, number);
 
   if (!sent) {
     return res.status(400).send();

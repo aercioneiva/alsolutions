@@ -13,5 +13,5 @@ function error(msg) {
 
 module.exports = {
   info,
-  error,
+  error
 };

@@ -9,16 +9,16 @@ async function _processarMessage(cliente, contrato, evento, company, number) {
     const payload = {
       ConsultaClientes: {
         Autenticacao: {
-          ChaveIntegracao: `ITI58HF6F77UGFMZ3XVRPF4W57LJR3`,
+          ChaveIntegracao: `ITI58HF6F77UGFMZ3XVRPF4W57LJR3`
         },
-        Filtro: `Codigo='${cliente}'`,
-      },
+        Filtro: `Codigo='${cliente}'`
+      }
     };
 
     const response = await axios({
       method: "POST",
       url: `https://integra.loga.net.br/routerbox/ws/rbx_server_json.php`,
-      data: payload,
+      data: payload
     });
 
     if (response.data.result) {
@@ -38,8 +38,7 @@ async function _processarMessage(cliente, contrato, evento, company, number) {
       switch (evento) {
         case "BLOCK":
           eventoDescricao = "bloqueado";
-          eventoDescricaoComplemento =
-            ", para regularização entre em contato com a gente pelo telefone (44) 98888-8888";
+          eventoDescricaoComplemento = ", para regularização entre em contato com a gente pelo telefone (44) 98888-8888";
           break;
         case "UNBLOCK":
           eventoDescricao = "desbloqueado";
@@ -52,13 +51,11 @@ async function _processarMessage(cliente, contrato, evento, company, number) {
           break;
         case "CANCEL":
           eventoDescricao = "cancelado";
-          eventoDescricaoComplemento =
-            ", para regularização entre em contato com a gente pelo telefone (44) 98888-8888";
+          eventoDescricaoComplemento = ", para regularização entre em contato com a gente pelo telefone (44) 98888-8888";
           break;
         case "BANDWIDTH_LIMIT":
           eventoDescricao = "reduzido a banda de navegação";
-          eventoDescricaoComplemento =
-            ", para regularização entre em contato com a gente pelo telefone (44) 98888-8888";
+          eventoDescricaoComplemento = ", para regularização entre em contato com a gente pelo telefone (44) 98888-8888";
           break;
       }
 
@@ -68,25 +65,17 @@ async function _processarMessage(cliente, contrato, evento, company, number) {
         messaging_product: "whatsapp",
         to: `55${telefone}`,
         text: { body: message },
-        contract: company.contract,
+        contract: company.contract
       };
 
       ZapNotificationsQueue.add("EnviarMensagemZapNotifications", data);
     }
   } catch (error) {
-    Logger.error(
-      `[SERVICE-CONTRACT-NOTIFICATION] Erro ao recuperar cliente: ${cliente} - ${error}`,
-    );
+    Logger.error(`[SERVICE-CONTRACT-NOTIFICATION] Erro ao recuperar cliente: ${cliente} - ${error}`);
   }
 }
 
-exports.sendNotification = async (
-  contract,
-  cliente,
-  contrato,
-  evento,
-  number,
-) => {
+exports.sendNotification = async (contract, cliente, contrato, evento, number) => {
   if (!contract || !cliente || !contrato || !evento) {
     return false;
   }

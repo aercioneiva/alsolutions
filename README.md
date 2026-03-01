@@ -2,7 +2,7 @@
 
 > (API)
 
-- [ ] implementar linter no codigo
+- [x] implementar linter no codigo
 - [ ] rever template de nova conversa, esta fixo
 - [ ] montar logica de template para envio de mensagens avulsas
 - [ ] montar logica de template para envio de notificacoes (charge-notifications)

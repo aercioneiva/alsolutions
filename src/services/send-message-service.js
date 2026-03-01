@@ -19,7 +19,7 @@ async function _sendMessage(message, number, company) {
     contract: company.contract,
     id_whatsapp: company.id_whatsapp,
     version_whatsapp: company.version_whatsapp,
-    token_whatsapp: company.token_whatsapp,
+    token_whatsapp: company.token_whatsapp
   };
   ZapQueue.add("EnviarMensagemWhatsapp", data);
 }

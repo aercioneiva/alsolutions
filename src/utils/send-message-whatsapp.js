@@ -22,10 +22,10 @@ exports.enviarMensagemZapMeta = async function (whatsapp, data) {
       url: `${process.env.ZAP_URL}/${whatsapp.version}/${whatsapp.id}/messages`,
       headers: {
         Authorization: `Bearer ${token_zap}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
       data: data,
-      timeout: 30000, // 30 segundos de timeout
+      timeout: 30000 // 30 segundos de timeout
     });
 
     return true;

@@ -20,14 +20,14 @@ module.exports = class SessiontRepository {
       session: row.session,
       conversation: row.conversation,
       ticket: row.ticket,
-      updatedAt: row.updated_at,
+      updatedAt: row.updated_at
     };
   }
 
   async findExpirationSession(contract) {
     const [rows] = await db.raw(
       `SELECT id, conversation, FLOOR(TIMESTAMPDIFF(SECOND, updated_at, NOW()) / 60) AS uptime FROM session WHERE contract=? ORDER BY id`,
-      [contract],
+      [contract]
     );
 
     return rows;
@@ -40,7 +40,7 @@ module.exports = class SessiontRepository {
       number,
       session,
       conversation: 0,
-      ticket: 0,
+      ticket: 0
     };
 
     if (conversation) {
@@ -73,9 +73,7 @@ module.exports = class SessiontRepository {
     if (updatedAt) {
       data.updated_at = updatedAt;
     }
-    const affectedRows = await db("session")
-      .where({ id: idSession })
-      .update(data);
+    const affectedRows = await db("session").where({ id: idSession }).update(data);
 
     if (affectedRows) {
       return affectedRows;
@@ -97,10 +95,7 @@ module.exports = class SessiontRepository {
   }
 
   async delete(idSession) {
-    const affectedRows = await db("session")
-      .where({ id: idSession })
-      .delete()
-      .limit(1);
+    const affectedRows = await db("session").where({ id: idSession }).delete().limit(1);
 
     return affectedRows;
   }

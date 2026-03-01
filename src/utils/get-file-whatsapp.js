@@ -11,8 +11,8 @@ exports.getFileWhatsapp = async (whatsapp, idMedia) => {
       url: `${process.env.ZAP_URL}/${idMedia}`,
       headers: {
         Authorization: `Bearer ${token_zap}`,
-        "Content-Type": "application/json",
-      },
+        "Content-Type": "application/json"
+      }
     });
 
     if (ret_url_file.data?.url) {
@@ -22,8 +22,8 @@ exports.getFileWhatsapp = async (whatsapp, idMedia) => {
         responseType: "arraybuffer",
         responseEncoding: "binary",
         headers: {
-          Authorization: `Bearer ${token_zap}`,
-        },
+          Authorization: `Bearer ${token_zap}`
+        }
       });
 
       return ret_get_file.data;

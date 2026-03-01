@@ -9,7 +9,7 @@ async function _processarMessage(message, numbers, company) {
   const number = `55${numbers}`;
   try {
     const headers = {
-      authentication_key: "ITI58HF6F77UGFMZ3XVRPF4W57LJR3",
+      authentication_key: "ITI58HF6F77UGFMZ3XVRPF4W57LJR3"
     };
 
     const response = await axios({
@@ -17,8 +17,8 @@ async function _processarMessage(message, numbers, company) {
       url: `https://integra.loga.net.br/routerbox/ws_json/ws_json.php`,
       headers,
       data: {
-        get_unpaid_document: { customer_id: cliente, account_number: 3 },
-      },
+        get_unpaid_document: { customer_id: cliente, account_number: 3 }
+      }
     });
 
     if (response.data.result) {
@@ -27,9 +27,9 @@ async function _processarMessage(message, numbers, company) {
         messaging_product: "whatsapp",
         to: number,
         text: {
-          body: `Aqui vai uma mensagem de cobrança a ser definida`,
+          body: `Aqui vai uma mensagem de cobrança a ser definida`
         },
-        contract: company.contract,
+        contract: company.contract
       };
 
       ZapNotificationsQueue.add("EnviarMensagemZapNotifications", data);
@@ -40,7 +40,7 @@ async function _processarMessage(message, numbers, company) {
           method: "POST",
           url: `https://integra.loga.net.br/routerbox/ws_json/ws_json.php`,
           headers,
-          data: { get_banking_billet: { document_id: boleto.id } },
+          data: { get_banking_billet: { document_id: boleto.id } }
         });
 
         const responsePix = axios({
@@ -50,22 +50,14 @@ async function _processarMessage(message, numbers, company) {
           data: {
             get_pix_copia_cola: {
               banking_billet_id: boleto.id,
-              send_pix_copia_cola: false,
-            },
-          },
+              send_pix_copia_cola: false
+            }
+          }
         });
 
         const [pdf, pixCopiaCola] = await Promise.all([
-          responseFileUrl.catch((error) =>
-            Logger.error(
-              `[SERVICE-CHARGE-NOTIFICATION] Erro ao buscar link pdf: ${error}`,
-            ),
-          ),
-          responsePix.catch((error) =>
-            Logger.error(
-              `[SERVICE-CHARGE-NOTIFICATION] Erro ao buscar pix-copiaecola ${error}`,
-            ),
-          ),
+          responseFileUrl.catch((error) => Logger.error(`[SERVICE-CHARGE-NOTIFICATION] Erro ao buscar link pdf: ${error}`)),
+          responsePix.catch((error) => Logger.error(`[SERVICE-CHARGE-NOTIFICATION] Erro ao buscar pix-copiaecola ${error}`))
         ]);
 
         if (pdf) {
@@ -75,11 +67,9 @@ async function _processarMessage(message, numbers, company) {
             type: "document",
             document: {
               link: pdf.data.result.banking_billet_link,
-              filename:
-                pdf.data.result.banking_billet_link.split("/")[5] ||
-                "Boleto.pdf",
+              filename: pdf.data.result.banking_billet_link.split("/")[5] || "Boleto.pdf"
             },
-            contract: company.contract,
+            contract: company.contract
           };
 
           ZapNotificationsQueue.add("EnviarMensagemZapNotifications", data);
@@ -90,9 +80,9 @@ async function _processarMessage(message, numbers, company) {
             messaging_product: "whatsapp",
             to: number,
             text: {
-              body: pixCopiaCola.data.result,
+              body: pixCopiaCola.data.result
             },
-            contract: company.contract,
+            contract: company.contract
           };
 
           ZapNotificationsQueue.add("EnviarMensagemZapNotifications", data);
@@ -100,9 +90,7 @@ async function _processarMessage(message, numbers, company) {
       }
     }
   } catch (error) {
-    Logger.error(
-      `[SERVICE-CHARGE-NOTIFICATION] Erro ao recuperar cliente: ${cliente}-${error}`,
-    );
+    Logger.error(`[SERVICE-CHARGE-NOTIFICATION] Erro ao recuperar cliente: ${cliente}-${error}`);
   }
 }
 

@@ -4,10 +4,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 const Logger = require("../libs/logger");
 
-exports.enviarMensagemChatWoot = async function (
-  chatwoot,
-  { data, conversationId },
-) {
+exports.enviarMensagemChatWoot = async function (chatwoot, { data, conversationId }) {
   try {
     const formData = new FormData();
     formData.append("message_type", "incoming");
@@ -20,12 +17,12 @@ exports.enviarMensagemChatWoot = async function (
     }
 
     const headers = {
-      headers: { api_access_token: chatwoot.token, ...formData.getHeaders() },
+      headers: { api_access_token: chatwoot.token, ...formData.getHeaders() }
     };
     await axios.post(
       `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations/${conversationId}/messages`,
       formData,
-      headers,
+      headers
     );
 
     return true;

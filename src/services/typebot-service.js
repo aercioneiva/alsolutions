@@ -10,9 +10,9 @@ exports.startTypeBot = async (data) => {
       url: `${process.env.TYPEBOT_URL}/typebots/loga/startChat`,
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      data: data,
+      data: data
     });
 
     return res.data;
@@ -32,9 +32,9 @@ exports.sendMessageTypeBot = async (data, session) => {
       url: `${process.env.TYPEBOT_URL}/sessions/${session}/continueChat`,
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      data: data,
+      data: data
     });
 
     return res.data;

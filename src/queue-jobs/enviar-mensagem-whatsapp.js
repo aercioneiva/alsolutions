@@ -11,5 +11,5 @@ module.exports = {
       console.error(error);
       throw error;
     }
-  },
+  }
 };

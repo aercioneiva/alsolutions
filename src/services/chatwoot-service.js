@@ -14,57 +14,50 @@ const CONSTANTS = {
   EVENTS: {
     MESSAGE_CREATED: "message_created",
     CONVERSATION_STATUS_CHANGED: "conversation_status_changed",
-    CONVERSATION_CREATED: "conversation_created",
+    CONVERSATION_CREATED: "conversation_created"
   },
   MESSAGE_TYPES: {
-    OUTGOING: "outgoing",
+    OUTGOING: "outgoing"
   },
   CONVERSATION_STATUS: {
     RESOLVED: "resolved",
-    OPEN: "open",
+    OPEN: "open"
   },
   SESSION_TYPES: {
-    CHATWOOT: "chatwoot",
+    CHATWOOT: "chatwoot"
   },
   FILE_TYPES: {
     FILE: "file",
     IMAGE: "image",
     AUDIO: "audio",
-    VIDEO: "video",
+    VIDEO: "video"
   },
   HOURS_24: 24,
   MS_PER_HOUR: 1000 * 60 * 60,
   SYSTEM_SENDER: "routerbox",
   MESSAGE_ORIGIN: {
     CONTACT: "C",
-    ATTENDANT: "A",
+    ATTENDANT: "A"
   },
   TEMPLATES: {
-    NEW_CONVERSATION: "#template_novaconversa",
+    NEW_CONVERSATION: "#template_novaconversa"
   },
   ERROR_MESSAGES: {
-    WEBHOOK_CREATE_CONVERSATION:
-      "[WHATSAPP] Não conseguiu criar a conversa no ChatWoot",
+    WEBHOOK_CREATE_CONVERSATION: "[WHATSAPP] Não conseguiu criar a conversa no ChatWoot",
     INTEGRATION_NOT_FOUND: "[CHATWOOT] Não achou a integração",
     SESSION_CREATION_ERROR: "[CHATWOOT] Erro ao iniciar session",
     CHAT_RESOLUTION_ERROR: "[CHATWOOT] Erro ao resolver chat",
     USER_IN_BOT_FLOW: "está em um fluxo do bot aberto",
     USER_IN_ANOTHER_CONVERSATION: "está em outra conversa aberta",
-    CHAT_OUTSIDE_24H_WINDOW:
-      "[SYSTEM] Chat fora da janela de conversa do whatsapp",
-  },
+    CHAT_OUTSIDE_24H_WINDOW: "[SYSTEM] Chat fora da janela de conversa do whatsapp"
+  }
 };
 
 exports.startChatwoot = async (chatwoot, name, customAttributes) => {
   const headers = { headers: { api_access_token: chatwoot.token } };
 
   try {
-    const sourceId = await _getOrCreateContact(
-      chatwoot,
-      name,
-      customAttributes,
-      headers,
-    );
+    const sourceId = await _getOrCreateContact(chatwoot, name, customAttributes, headers);
 
     const conversationResponse = await axios.post(
       `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations`,
@@ -72,10 +65,10 @@ exports.startChatwoot = async (chatwoot, name, customAttributes) => {
         source_id: sourceId,
         custom_attributes: {
           codigo_cliente: customAttributes.codigo_cliente,
-          nome_cliente: customAttributes.nome_cliente,
-        },
+          nome_cliente: customAttributes.nome_cliente
+        }
       },
-      headers,
+      headers
     );
 
     return conversationResponse.data.id;
@@ -94,17 +87,13 @@ exports.processMessageChatWoot = async ({ message, contract }) => {
     const status = message.status;
 
     switch (true) {
-      case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED &&
-        message.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
+      case eventType === CONSTANTS.EVENTS.MESSAGE_CREATED && message.message_type === CONSTANTS.MESSAGE_TYPES.OUTGOING:
         return await _handleOutgoingMessage(message, company, contract);
-      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED &&
-        status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.RESOLVED:
         return await _handleConversationResolved(message, company, contract);
-      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED &&
-        status === CONSTANTS.CONVERSATION_STATUS.OPEN:
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_STATUS_CHANGED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
         return await _handleConversationReopened(message, company, contract);
-      case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED &&
-        status === CONSTANTS.CONVERSATION_STATUS.OPEN:
+      case eventType === CONSTANTS.EVENTS.CONVERSATION_CREATED && status === CONSTANTS.CONVERSATION_STATUS.OPEN:
         return await _handleConversationCreated(message, company, contract);
       default:
         return;
@@ -121,8 +110,7 @@ async function _handleOutgoingMessage(message, company, contract) {
     return;
   }
 
-  const customerPhoneNumber =
-    message.conversation.meta.sender.phone_number.replace("+", "");
+  const customerPhoneNumber = message.conversation.meta.sender.phone_number.replace("+", "");
   const sessionExists = await sessionService.getSession(customerPhoneNumber);
   const messageContent = message.content;
   const conversationId = message.conversation.id;
@@ -136,7 +124,7 @@ async function _handleOutgoingMessage(message, company, contract) {
 
   const contact = await contactService.getContact({
     number: customerPhoneNumber,
-    contract,
+    contract
   });
   const within24h = _isWithin24hWindow(contact?.lastMessage);
 
@@ -149,7 +137,7 @@ async function _handleOutgoingMessage(message, company, contract) {
       conversationId,
       customerPhoneNumber,
       sessionExists,
-      contract,
+      contract
     );
   }
 
@@ -161,26 +149,17 @@ async function _handleOutgoingMessage(message, company, contract) {
   return;
 }
 
-async function _processMessage(
-  message,
-  company,
-  contract,
-  customerPhoneNumber,
-) {
+async function _processMessage(message, company, contract, customerPhoneNumber) {
   const senderName = message.sender.name;
   const whatsapp = {
     id: company.id_whatsapp,
     version: company.version_whatsapp,
-    token: company.token_whatsapp,
+    token: company.token_whatsapp
   };
 
   if (_hasAttachments(message.attachments)) {
     for (const file of message.attachments) {
-      const whatsappFileData = _createWhatsAppFileData(
-        customerPhoneNumber,
-        file,
-        contract,
-      );
+      const whatsappFileData = _createWhatsAppFileData(customerPhoneNumber, file, contract);
       enviarMensagemZapMeta(whatsapp, whatsappFileData);
     }
   } else {
@@ -188,7 +167,7 @@ async function _processMessage(
       messaging_product: "whatsapp",
       to: customerPhoneNumber,
       text: { body: `*${senderName}:*\n${message.content}` },
-      contract,
+      contract
     };
     enviarMensagemZapMeta(whatsapp, messageData);
   }
@@ -201,7 +180,7 @@ async function _handleMessageOutside24hWindow(
   conversationId,
   customerPhoneNumber,
   sessionExists,
-  contract,
+  contract
 ) {
   if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
     if (!sessionExists) {
@@ -209,7 +188,7 @@ async function _handleMessageOutside24hWindow(
         contract,
         number: customerPhoneNumber,
         session: CONSTANTS.SESSION_TYPES.CHATWOOT,
-        conversation: conversationId,
+        conversation: conversationId
       });
 
       if (!sessionCreated) {
@@ -222,26 +201,25 @@ async function _handleMessageOutside24hWindow(
       customerPhoneNumber,
       message.conversation.meta.sender.name,
       conversationId,
-      "Em análise",
+      "Em análise"
     );
+
     const whatsapp = {
       id: company.id_whatsapp,
       version: company.version_whatsapp,
-      token: company.token_whatsapp,
+      token: company.token_whatsapp
     };
+
     enviarMensagemZapMeta(whatsapp, templateData);
+
     return;
   }
 
+  await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
   await _sendSystemMessage(
     company,
     conversationId,
-    CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW,
-  );
-  await _sendSystemMessage(
-    company,
-    conversationId,
-    "[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário",
+    "[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário"
   );
 
   return;
@@ -250,22 +228,19 @@ async function _handleMessageOutside24hWindow(
 async function _handleConversationResolved(message, company, contract) {
   try {
     const customerId = message.custom_attributes?.codigo_cliente || 0;
-    const customerPhoneNumber = message.meta?.sender?.phone_number.replace(
-      "+",
-      "",
-    );
+    const customerPhoneNumber = message.meta?.sender?.phone_number.replace("+", "");
     const conversationId = message.id;
     const sessionExists = await sessionService.getSession(customerPhoneNumber);
     const whatsapp = {
       id: company.id_whatsapp,
       version: company.version_whatsapp,
-      token: company.token_whatsapp,
+      token: company.token_whatsapp
     };
 
     const chatwoot = {
       account: company.chatwoot_account,
       inbox: company.chatwoot_inbox,
-      token: company.chatwoot_token,
+      token: company.chatwoot_token
     };
 
     if (!sessionExists || sessionExists.conversation !== conversationId) {
@@ -281,14 +256,14 @@ async function _handleConversationResolved(message, company, contract) {
     // Envia mensagem de encerramento se dentro da janela de 24h
     const contact = await contactService.getContact({
       number: customerPhoneNumber,
-      contract,
+      contract
     });
     if (_isWithin24hWindow(contact?.lastMessage)) {
       let data = {
         messaging_product: "whatsapp",
         to: customerPhoneNumber,
         text: { body: `Chat encerrado!` },
-        contract,
+        contract
       };
       enviarMensagemZapMeta(whatsapp, data);
     }
@@ -297,31 +272,22 @@ async function _handleConversationResolved(message, company, contract) {
     if (sessionExists.ticket > 0) {
       const messages = await _getMessages(chatwoot, conversationId);
       if (messages.length > 0) {
-        const messagesRbx = _mapMessagesToRbxFormat(
-          messages,
-          customerId,
-          sessionExists.ticket,
-        );
+        const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
         await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
       }
 
-      const gerarPesquisaSatisfacao =
-        await rbxsoftService.gerarPesquisaSatisfacao(
-          company,
-          sessionExists.ticket,
-        );
+      const gerarPesquisaSatisfacao = await rbxsoftService.gerarPesquisaSatisfacao(company, sessionExists.ticket);
       if (gerarPesquisaSatisfacao?.result?.[0]?.generate_questionare_link) {
-        const linkPesquisa =
-          gerarPesquisaSatisfacao.result[0].generate_questionare_link;
+        const linkPesquisa = gerarPesquisaSatisfacao.result[0].generate_questionare_link;
         let data2 = {
           messaging_product: "whatsapp",
           to: customerPhoneNumber,
           text: {
-            body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `,
+            body: `${company.name}\n\n🙏 Agradecemos o contato e esperamos que sua dúvida ou prolema tenha sido resolvido.\n\nPara melhor atendê-lo, deixe sua sugestão de melhoria para nosso time e responda à pesquisa de satisfação referente a este atendimento no link abaixo, é rápido!\n\n👉 ${linkPesquisa} `
           },
           contract,
           id_whatsapp: company.id_whatsapp,
-          version_whatsapp: company.version_whatsapp,
+          version_whatsapp: company.version_whatsapp
         };
         enviarMensagemZapMeta(whatsapp, data2);
       }
@@ -329,39 +295,26 @@ async function _handleConversationResolved(message, company, contract) {
       await rbxsoftService.encerrarAtendimento(company, sessionExists.ticket);
     }
   } catch (error) {
-    Logger.error(
-      `${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`,
-    );
+    Logger.error(`${CONSTANTS.ERROR_MESSAGES.CHAT_RESOLUTION_ERROR}: ${error.message}`);
   }
 
   return;
 }
 
 async function _handleConversationReopened(message, company, contract) {
-  const customerPhoneNumber = message.meta?.sender?.phone_number.replace(
-    "+",
-    "",
-  );
+  const customerPhoneNumber = message.meta?.sender?.phone_number.replace("+", "");
   const sessionExists = await sessionService.getSession(customerPhoneNumber);
   const conversationId = message.id;
 
   if (sessionExists) {
     const statusMessage = _getSessionStatus(sessionExists);
-    await _sendSystemMessage(
-      company,
-      conversationId,
-      `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`,
-    );
-    await _sendSystemMessage(
-      company,
-      conversationId,
-      "[SYSTEM] Reabra essa conversa novamente mais tarde!",
-    );
+    await _sendSystemMessage(company, conversationId, `[SYSTEM] O Usuário ${statusMessage} tente novamente mais tarde`);
+    await _sendSystemMessage(company, conversationId, "[SYSTEM] Reabra essa conversa novamente mais tarde!");
   } else {
     // Abre conversa novamente
     const contact = await contactService.getContact({
       number: customerPhoneNumber,
-      contract,
+      contract
     });
     const within24h = _isWithin24hWindow(contact?.lastMessage);
 
@@ -369,25 +322,17 @@ async function _handleConversationReopened(message, company, contract) {
       contract,
       number: customerPhoneNumber,
       session: CONSTANTS.SESSION_TYPES.CHATWOOT,
-      conversation: conversationId,
+      conversation: conversationId
     });
 
     if (within24h) {
-      await _sendSystemMessage(
-        company,
-        conversationId,
-        "[SYSTEM] Conversa reaberta com whatsapp",
-      );
+      await _sendSystemMessage(company, conversationId, "[SYSTEM] Conversa reaberta com whatsapp");
     } else {
+      await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
       await _sendSystemMessage(
         company,
         conversationId,
-        CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW,
-      );
-      await _sendSystemMessage(
-        company,
-        conversationId,
-        "[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário",
+        "[SYSTEM] Para iniciar o atendimento envie o seguinte template: #template_novaconversa, e aguarde o retorno do usuário"
       );
     }
   }
@@ -398,20 +343,17 @@ async function _handleConversationReopened(message, company, contract) {
 async function _handleConversationCreated(message, company, contract) {
   try {
     const customerId = message.custom_attributes?.codigo_cliente || 0;
-    const customerPhoneNumber = message.meta?.sender?.phone_number.replace(
-      "+",
-      "",
-    );
+    const customerPhoneNumber = message.meta?.sender?.phone_number.replace("+", "");
     const sessionExists = await sessionService.getSession(customerPhoneNumber);
 
     if (customerId) {
       const ticketResponse = await rbxsoftService.abrirAtendimento(company, {
-        customer: customerId,
+        customer: customerId
       });
 
       if (sessionExists && ticketResponse?.result?.NumeroAtendimento) {
         await sessionService.updateSession(sessionExists.id, {
-          ticket: ticketResponse.result.NumeroAtendimento,
+          ticket: ticketResponse.result.NumeroAtendimento
         });
       }
     }
@@ -432,9 +374,7 @@ async function _loadCompanyData(contract) {
   const company = await companyService.getCompany(contract);
 
   if (!company) {
-    throw new Error(
-      `${CONSTANTS.ERROR_MESSAGES.INTEGRATION_NOT_FOUND} ${contract}`,
-    );
+    throw new Error(`${CONSTANTS.ERROR_MESSAGES.INTEGRATION_NOT_FOUND} ${contract}`);
   }
 
   const companyData = {
@@ -455,7 +395,7 @@ async function _loadCompanyData(contract) {
     host: company.host,
     fluxo: company.fluxo,
     topico: company.topico,
-    cause: company.cause,
+    cause: company.cause
   };
 
   Cache.set(contract, companyData);
@@ -469,38 +409,28 @@ async function _getOrCreateContact(chatwoot, name, customAttributes, headers) {
         attribute_key: "phone_number",
         filter_operator: "contains",
         values: [`+${customAttributes.number}`],
-        query_operator: null,
-      },
-    ],
+        query_operator: null
+      }
+    ]
   };
 
   try {
-    const response = await axios.post(
-      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts/filter`,
-      payload,
-      headers,
-    );
+    const response = await axios.post(`${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts/filter`, payload, headers);
 
     if (response.data?.payload[0]?.contact_inboxes[0]?.source_id) {
       return response.data.payload[0].contact_inboxes[0].source_id;
     }
   } catch (error) {
-    Logger.info(
-      `[CHATWOOT] Contato não encontrado, criando novo: ${error.message}`,
-    );
+    Logger.info(`[CHATWOOT] Contato não encontrado, criando novo: ${error.message}`);
   }
 
   const newContactData = {
     inbox_id: chatwoot.inbox,
     name,
-    phone_number: `+${customAttributes.number}`,
+    phone_number: `+${customAttributes.number}`
   };
 
-  const newContactResponse = await axios.post(
-    `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`,
-    newContactData,
-    headers,
-  );
+  const newContactResponse = await axios.post(`${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`, newContactData, headers);
 
   return newContactResponse.data.payload.contact_inbox.source_id;
 }
@@ -510,13 +440,13 @@ async function _sendSystemMessage(company, conversationId, messageContent) {
     type: "content",
     file: null,
     content: messageContent,
-    fileName: null,
+    fileName: null
   };
 
   const chatwoot = {
     account: company.chatwoot_account,
     inbox: company.chatwoot_inbox,
-    token: company.chatwoot_token,
+    token: company.chatwoot_token
   };
 
   await enviarMensagemChatWoot(chatwoot, { data: messageData, conversationId });
@@ -526,7 +456,7 @@ function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
   const baseData = {
     messaging_product: "whatsapp",
     to: customerPhoneNumber,
-    contract,
+    contract
   };
 
   const fileType = file.file_type;
@@ -536,20 +466,20 @@ function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
   const fileConfigs = {
     [CONSTANTS.FILE_TYPES.FILE]: {
       type: "document",
-      document: { link: urlFile, filename: fileName },
+      document: { link: urlFile, filename: fileName }
     },
     [CONSTANTS.FILE_TYPES.IMAGE]: {
       type: "image",
-      image: { link: urlFile },
+      image: { link: urlFile }
     },
     [CONSTANTS.FILE_TYPES.AUDIO]: {
       type: "audio",
-      audio: { link: urlFile },
+      audio: { link: urlFile }
     },
     [CONSTANTS.FILE_TYPES.VIDEO]: {
       type: "video",
-      video: { link: urlFile },
-    },
+      video: { link: urlFile }
+    }
   };
 
   const config = fileConfigs[fileType];
@@ -565,9 +495,7 @@ function _hasAttachments(attachments) {
 }
 
 function _getSessionStatus(session) {
-  return session?.conversation > 0
-    ? CONSTANTS.ERROR_MESSAGES.USER_IN_ANOTHER_CONVERSATION
-    : CONSTANTS.ERROR_MESSAGES.USER_IN_BOT_FLOW;
+  return session?.conversation > 0 ? CONSTANTS.ERROR_MESSAGES.USER_IN_ANOTHER_CONVERSATION : CONSTANTS.ERROR_MESSAGES.USER_IN_BOT_FLOW;
 }
 
 function _isWithin24hWindow(date) {
@@ -599,7 +527,7 @@ async function _getMessages(chatwoot, conversationId) {
 
     const response = await axios.get(
       `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations/${conversationId}/messages`,
-      headers,
+      headers
     );
 
     return response.data?.payload || [];
@@ -618,10 +546,7 @@ function _mapMessagesToRbxFormat(messages, customerId, ticketId) {
       customer: customerId,
       ticket_id: ticketId,
       attendant: CONSTANTS.SYSTEM_SENDER,
-      origin:
-        msg?.sender?.type === "contact"
-          ? CONSTANTS.MESSAGE_ORIGIN.CONTACT
-          : CONSTANTS.MESSAGE_ORIGIN.ATTENDANT,
-      content: msg.content,
+      origin: msg?.sender?.type === "contact" ? CONSTANTS.MESSAGE_ORIGIN.CONTACT : CONSTANTS.MESSAGE_ORIGIN.ATTENDANT,
+      content: msg.content
     }));
 }
