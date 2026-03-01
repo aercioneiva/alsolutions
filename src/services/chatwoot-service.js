@@ -213,6 +213,12 @@ async function _handleConversationResolved(message, company, contract) {
          token: company.token_whatsapp
       };
 
+      const chatwoot = {
+         account: company.chatwoot_account,
+         inbox: company.chatwoot_inbox,
+         token: company.chatwoot_token
+      };
+
       if (!sessionExists || sessionExists.conversation !== conversationId) {
          return;
       }
@@ -238,7 +244,7 @@ async function _handleConversationResolved(message, company, contract) {
 
       // Envia mensagens para RBXSoft se houver ticket
       if (sessionExists.ticket > 0) {
-         const messages = await _getMessages(company, conversationId);
+         const messages = await _getMessages(chatwoot, conversationId);
          if (messages.length > 0) {
             const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
             await rbxsoftService.incluirMensagemAtendimento(company, messagesRbx);
