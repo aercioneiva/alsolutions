@@ -55,6 +55,13 @@ async function getMessageBydSessionId(sessionId){
    return await messageRepository.getMessageBydSessionId(sessionId);
 }
 
+async function deleteOldMessages(days){
+   const messageRepository = _makeMessage();
+   await messageRepository.deleteOldMessages();
+}
+
+
+
 exports.webhook = async(req) => {
    try {
       if(req.body.entry?.[0]?.changes[0]?.value?.statuses){

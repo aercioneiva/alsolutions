@@ -41,4 +41,12 @@ module.exports = class WhatsappMessageRepository {
          session_id: row.session_id
       }));
    }
+
+   async deleteOldMessages() {
+      const [ rows ] = await db.raw(`SELECT id FROM whatsapp_messages WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 HOUR) AND status='completed' ORDER BY id`);
+
+      for(const row of rows){
+         await db.raw(`DELETE FROM whatsapp_messages WHERE id = ?`, [row.id]);
+      }
+   }
 }

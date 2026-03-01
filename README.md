@@ -8,7 +8,8 @@
 - [X] implementar wait nas mensagens vinda do fluxo
 - [ ] se o usuario iniciar uma nova conversa no chatwoot, abrir um atendimento no rbx. (vai precisar voltar a salvar o cliente vinculado ao contato)
 - [X] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
-- [ ] ajustar o fluxo para nao salvar o boleto completo
+- [X] ajustar o fluxo para nao salvar o boleto completo
+- [X] apagar whatsapp_messages após 1h
 
 
 desabilitar a criação de conta pelo login do chatwoot

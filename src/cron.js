@@ -8,12 +8,18 @@ process.on('uncaughtException', (err) => {
 });
 
 const { inactivity } = require('./cron-jobs/inactivity');
+const { deleteWhatsappMessages } = require('./cron-jobs/old-messages-whatsapp');
 
 
 // Define um cron job que será executado a cada minuto
 cron.schedule('* * * * *', async () => {
    Logger.info('Task executed every 1 minute:');
    inactivity();
+});
+
+cron.schedule('0 * * * *', async () => {
+   Logger.info('Task executed every 1 hour');
+   deleteWhatsappMessages();
 });
 
 
