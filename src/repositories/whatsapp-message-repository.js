@@ -28,7 +28,7 @@ module.exports = class WhatsappMessageRepository {
    }
 
    async getMessageBydSessionId(sessionId) {
-      const [ rows ] = await db.raw(`SELECT * FROM whatsapp_messages WHERE session_id = ?`, [sessionId]);
+      const [ rows ] = await db.raw(`SELECT * FROM whatsapp_messages WHERE session_id = ? ORDER BY id`, [sessionId]);
       
       return rows.map(row => ({
          id: row.id,
