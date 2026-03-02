@@ -44,7 +44,4 @@ async function main() {
   });
 }
 
-function teste() {
-  console.log("teste");
-}
 main();

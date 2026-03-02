@@ -88,7 +88,7 @@ UNIQUE KEY uk_contact_number (number)
 );
 
 CREATE TABLE `contact_customer` (
-`Id` bigint(18) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+`id` bigint(18) NOT NULL AUTO_INCREMENT PRIMARY KEY,
 `contact_id` bigint(18) NOT NULL,
 `name` varchar(100) NOT NULL,
 `document` varchar(19) NOT NULL,

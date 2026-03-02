@@ -122,11 +122,8 @@ async function _handleOutgoingMessage(message, company, contract) {
     return;
   }
 
-  const contact = await contactService.getContact({
-    number: customerPhoneNumber,
-    contract
-  });
-  const within24h = _isWithin24hWindow(contact?.lastMessage);
+  const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
+  const within24h = _isWithin24hWindow(contact.lastMessage);
 
   // Se está fora da janela de 24h
   if (!within24h) {
@@ -142,7 +139,7 @@ async function _handleOutgoingMessage(message, company, contract) {
   }
 
   // Processa a mensagem normalmente
-  if (sessionExists?.conversation === conversationId) {
+  if (sessionExists.conversation === conversationId) {
     await _processMessage(message, company, contract, customerPhoneNumber);
   }
 
@@ -258,7 +255,7 @@ async function _handleConversationResolved(message, company, contract) {
       number: customerPhoneNumber,
       contract
     });
-    if (_isWithin24hWindow(contact?.lastMessage)) {
+    if (_isWithin24hWindow(contact.lastMessage)) {
       let data = {
         messaging_product: "whatsapp",
         to: customerPhoneNumber,
@@ -316,7 +313,7 @@ async function _handleConversationReopened(message, company, contract) {
       number: customerPhoneNumber,
       contract
     });
-    const within24h = _isWithin24hWindow(contact?.lastMessage);
+    const within24h = _isWithin24hWindow(contact.lastMessage);
 
     await sessionService.createSession({
       contract,

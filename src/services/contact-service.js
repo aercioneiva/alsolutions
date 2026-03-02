@@ -5,6 +5,7 @@ const Logger = require("../libs/logger");
 const makeContact = () => {
   return new ContactRepository();
 };
+
 exports.getContact = async ({ number, contract }) => {
   const contactRepository = makeContact();
 
@@ -48,10 +49,22 @@ exports.createContact = async (contact) => {
       number: contact.number.replace(/\D/g, ""),
       contract: contact.contract
     });
+
     if (!oldContact) {
       const contactId = await contactRepository.create(contact);
 
       return contactId;
+    }
+
+    if (oldContact) {
+      const customer = await contactRepository.findCustomer({
+        contact_id: oldContact.id,
+        code: contact.customer.code
+      });
+
+      if (!customer) {
+        await contactRepository.createCustomer(contact.customer);
+      }
     }
 
     return oldContact.id;
@@ -61,6 +74,7 @@ exports.createContact = async (contact) => {
 
   return null;
 };
+
 exports.updateLastMessage = async (contactPhoneNumber) => {
   const contactRepository = makeContact();
 

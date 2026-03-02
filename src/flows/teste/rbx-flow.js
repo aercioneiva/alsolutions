@@ -585,7 +585,12 @@ async function salvarContato({ contract, cliente }) {
         contact: {
           contract: contract,
           number: cliente.whatsapp,
-          name: cliente.nome
+          name: cliente.nome,
+          customer: {
+            name: cliente.codigo,
+            document: cliente.documento,
+            code: cliente.codigo
+          }
         }
       }
     });
