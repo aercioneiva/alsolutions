@@ -108,7 +108,7 @@ const fluxoAtendimentoRBX = {
         const opcao = mensagem.trim();
 
         if (opcao == 1) {
-          salvarContato(dados);
+          //salvarContato(dados);
           return {
             mensagem: null,
             tipo: null,
@@ -166,6 +166,7 @@ const fluxoAtendimentoRBX = {
             };
           }
 
+          await salvarContato(dados);
           return {
             mensagem: "Certo, vou transferir você para o atendimento humano!",
             tipo: "text",

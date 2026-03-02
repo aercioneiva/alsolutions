@@ -423,7 +423,7 @@ async function _getOrCreateContact(chatwoot, name, customAttributes, headers) {
 
   const newContactData = {
     inbox_id: chatwoot.inbox,
-    name,
+    name: name.replace("'", "").replace('"', "").trim(),
     phone_number: `+${customAttributes.number}`
   };
 
