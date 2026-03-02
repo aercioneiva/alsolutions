@@ -181,15 +181,24 @@ async function _handleMessageOutside24hWindow(
 ) {
   if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
     if (!sessionExists) {
+      const customer = await contactService.findLastCustomer(contract, customerPhoneNumber);
+
+      let ticket = 0;
+      if (customer) {
+        const ticketResponse = await rbxsoftService.abrirAtendimento(company, { customer: customer.code });
+        ticket = ticketResponse?.result?.NumeroAtendimento || 0;
+      }
       const sessionCreated = await sessionService.createSession({
         contract,
         number: customerPhoneNumber,
         session: CONSTANTS.SESSION_TYPES.CHATWOOT,
-        conversation: conversationId
+        conversation: conversationId,
+        ticket
       });
 
       if (!sessionCreated) {
         Logger.error(CONSTANTS.ERROR_MESSAGES.SESSION_CREATION_ERROR);
+        return;
       }
     }
 

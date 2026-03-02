@@ -86,3 +86,15 @@ exports.updateLastMessage = async (contactPhoneNumber) => {
 
   return null;
 };
+
+exports.findLastCustomer = async (contract, contactPhoneNumber) => {
+  const contactRepository = makeContact();
+
+  try {
+    return await contactRepository.findLastCustomer(contract, contactPhoneNumber);
+  } catch (error) {
+    Logger.error(`[SERVICE-CONTACT] Erro ao buscar último cliente do contato:`);
+  }
+
+  return null;
+};
