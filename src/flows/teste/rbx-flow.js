@@ -587,7 +587,7 @@ async function salvarContato({ contract, cliente }) {
           number: cliente.whatsapp,
           name: cliente.nome,
           customer: {
-            name: cliente.codigo,
+            name: cliente.nome,
             document: cliente.documento,
             code: cliente.codigo
           }
