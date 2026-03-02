@@ -108,7 +108,6 @@ const fluxoAtendimentoRBX = {
         const opcao = mensagem.trim();
 
         if (opcao == 1) {
-          //salvarContato(dados);
           return {
             mensagem: null,
             tipo: null,
@@ -166,7 +165,17 @@ const fluxoAtendimentoRBX = {
             };
           }
 
-          await salvarContato(dados);
+          const contatoSalvo = await salvarContato(dados);
+
+          if (!contatoSalvo) {
+            return {
+              mensagem: "Ocorreu um erro ao tentar transferir para o atendimento humano, tente novamente mais tarde!",
+              tipo: "text",
+              proximoStep: "finalizar",
+              aguardarResposta: false
+            };
+          }
+
           return {
             mensagem: "Certo, vou transferir você para o atendimento humano!",
             tipo: "text",
@@ -595,8 +604,10 @@ async function salvarContato({ contract, cliente }) {
         }
       }
     });
+    return true;
   } catch (error) {
     console.log(`[SERVICE-ALSOLUTIONS] Não conseguiu cadastrar o contato`, error);
+    return false;
   }
 }
 
