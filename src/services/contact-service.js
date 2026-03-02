@@ -63,7 +63,7 @@ exports.createContact = async (contact) => {
       });
 
       if (!customer) {
-        await contactRepository.createCustomer(contact.customer);
+        await contactRepository.createCustomer(oldContact.id, contact.customer);
       }
     }
 

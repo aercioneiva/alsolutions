@@ -138,9 +138,9 @@ module.exports = class ContactRepository {
     }
   }
 
-  async createCustomer(customer) {
+  async createCustomer(contactId, customer) {
     try {
-      const { contactId, name, document, code } = customer;
+      const { name, document, code } = customer;
 
       const [id] = await db
         .insert({
