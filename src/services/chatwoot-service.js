@@ -99,7 +99,8 @@ exports.processMessageChatWoot = async ({ message, contract }) => {
         return;
     }
   } catch (error) {
-    Logger.error(`[CHATWOOT] Erro ao processar webhook: ${error.message}`);
+    Logger.error(`[CHATWOOT] Erro ao processar webhook:`);
+    console.error(error);
     return;
   }
 };
@@ -139,7 +140,7 @@ async function _handleOutgoingMessage(message, company, contract) {
   }
 
   // Processa a mensagem normalmente
-  if (sessionExists.conversation === conversationId) {
+  if (sessionExists && sessionExists.conversation === conversationId) {
     await _processMessage(message, company, contract, customerPhoneNumber);
   }
 
@@ -234,7 +235,7 @@ async function _handleMessageOutside24hWindow(
 
     return;
   }
-
+  console.log("chegou aqui");
   await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
   await _sendSystemMessage(
     company,
@@ -247,7 +248,7 @@ async function _handleMessageOutside24hWindow(
 
 async function _handleConversationResolved(message, company, contract) {
   try {
-    const customerId = message.custom_attributes?.codigo_cliente || 0;
+    const customerId = message?.custom_attributes?.codigo_cliente || 0;
     const customerPhoneNumber = message.meta?.sender?.phone_number.replace("+", "");
     const conversationId = message.id;
     const sessionExists = await sessionService.getSession(customerPhoneNumber);
@@ -289,7 +290,7 @@ async function _handleConversationResolved(message, company, contract) {
     }
 
     // Envia mensagens para RBXSoft se houver ticket
-    if (sessionExists.ticket > 0) {
+    if (sessionExists.ticket > 0 && customerId > 0) {
       const messages = await _getMessages(chatwoot, conversationId);
       if (messages.length > 0) {
         const messagesRbx = _mapMessagesToRbxFormat(messages, customerId, sessionExists.ticket);
