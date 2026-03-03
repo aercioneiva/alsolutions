@@ -13,6 +13,7 @@
 - [x] ajustar o fluxo para nao salvar o boleto completo
 - [x] apagar whatsapp_messages após 1h
 - [ ] separar cron e work da API
+- [ ] add segurança na chamada da meta para api com header
 
 desabilitar a criação de conta pelo login do chatwoot
 https://chatwoot.aercioneiva.com/installation/onboarding (cria uma conta admin)

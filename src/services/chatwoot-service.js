@@ -182,11 +182,25 @@ async function _handleMessageOutside24hWindow(
   if (messageContent.trim() === CONSTANTS.TEMPLATES.NEW_CONVERSATION) {
     if (!sessionExists) {
       const customer = await contactService.findLastCustomer(contract, customerPhoneNumber);
+      const chatwoot = {
+        account: company.chatwoot_account,
+        inbox: company.chatwoot_inbox,
+        token: company.chatwoot_token
+      };
 
       let ticket = 0;
       if (customer) {
         const ticketResponse = await rbxsoftService.abrirAtendimento(company, { customer: customer.code });
         ticket = ticketResponse?.result?.NumeroAtendimento || 0;
+
+        const customAttributes = {
+          custom_attributes: {
+            codigo_cliente: customer.code,
+            nome_cliente: customer.name
+          }
+        };
+
+        await _createCustomAttribute(chatwoot, conversationId, customAttributes);
       }
       const sessionCreated = await sessionService.createSession({
         contract,
@@ -555,4 +569,20 @@ function _mapMessagesToRbxFormat(messages, customerId, ticketId) {
       origin: msg?.sender?.type === "contact" ? CONSTANTS.MESSAGE_ORIGIN.CONTACT : CONSTANTS.MESSAGE_ORIGIN.ATTENDANT,
       content: msg.content
     }));
+}
+
+async function _createCustomAttribute(chatwoot, conversationId, customAttributes) {
+  const headers = { headers: { api_access_token: chatwoot.token } };
+
+  try {
+    const conversationResponse = await axios.post(
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/conversations/${conversationId}/custom_attributes`,
+      customAttributes,
+      headers
+    );
+
+    return conversationResponse.data.id;
+  } catch (error) {
+    Logger.error("[CHATWOOT] Erro ao criar custom attribute:");
+  }
 }
