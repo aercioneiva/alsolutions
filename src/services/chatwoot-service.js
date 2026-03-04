@@ -124,6 +124,10 @@ async function _handleOutgoingMessage(message, company, contract) {
   }
 
   const contact = await contactService.getContact({ number: customerPhoneNumber, contract });
+  if (!contact) {
+    Logger.error("contato nao encontrado para enviar mensagem");
+    return;
+  }
   const within24h = _isWithin24hWindow(contact.lastMessage);
 
   // Se está fora da janela de 24h
@@ -139,12 +143,50 @@ async function _handleOutgoingMessage(message, company, contract) {
     );
   }
 
-  // Processa a mensagem normalmente
+  // Processa a mensagem normalmente ja que está dentro da janela de 24h e tem sessão ativa para essa conversa
   if (sessionExists && sessionExists.conversation === conversationId) {
     await _processMessage(message, company, contract, customerPhoneNumber);
+    return;
   }
 
-  return;
+  // esta dentro da janela mas não tem sessão, cria a sessão e depois processa a mensagem
+  if (!sessionExists) {
+    const customer = await contactService.findLastCustomer(contract, customerPhoneNumber);
+    const chatwoot = {
+      account: company.chatwoot_account,
+      inbox: company.chatwoot_inbox,
+      token: company.chatwoot_token
+    };
+
+    let ticket = 0;
+    if (customer) {
+      const ticketResponse = await rbxsoftService.abrirAtendimento(company, { customer: customer.code });
+      ticket = ticketResponse?.result?.NumeroAtendimento || 0;
+
+      const customAttributes = {
+        custom_attributes: {
+          codigo_cliente: customer.code,
+          nome_cliente: customer.name
+        }
+      };
+
+      await _createCustomAttribute(chatwoot, conversationId, customAttributes);
+    }
+    const sessionCreated = await sessionService.createSession({
+      contract,
+      number: customerPhoneNumber,
+      session: CONSTANTS.SESSION_TYPES.CHATWOOT,
+      conversation: conversationId,
+      ticket
+    });
+
+    if (!sessionCreated) {
+      Logger.error(CONSTANTS.ERROR_MESSAGES.SESSION_CREATION_ERROR);
+      return;
+    }
+
+    await _processMessage(message, company, contract, customerPhoneNumber);
+  }
 }
 
 async function _processMessage(message, company, contract, customerPhoneNumber) {
@@ -235,7 +277,6 @@ async function _handleMessageOutside24hWindow(
 
     return;
   }
-  console.log("chegou aqui");
   await _sendSystemMessage(company, conversationId, CONSTANTS.ERROR_MESSAGES.CHAT_OUTSIDE_24H_WINDOW);
   await _sendSystemMessage(
     company,
