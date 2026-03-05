@@ -63,9 +63,13 @@ exports.webhook = async (req, res) => {
 
 const validateSignature = (req, secret) => {
   const signature = req.headers["x-hub-signature-256"];
-  if (!signature) return false;
+  console.log("signature", signature);
 
   const body = JSON.stringify(req.body);
+  console.log("body", body);
+  console.log("secret", secret);
+
+  if (!signature) return false;
 
   const elements = signature.split("=");
   const signatureHash = elements[1];
