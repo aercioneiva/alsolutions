@@ -62,18 +62,19 @@ exports.webhook = async (req, res) => {
 };
 
 const validateSignature = (req, secret) => {
-  const signature = req.headers["x-hub-signature-256"];
-  console.log("signature", signature);
+  try {
+    const signature = req.headers["x-hub-signature-256"];
+    const body = JSON.stringify(req.body);
 
-  const body = JSON.stringify(req.body);
-  console.log("body", body);
-  console.log("secret", secret);
+    if (!signature) return false;
 
-  if (!signature) return false;
+    const elements = signature.split("=");
+    const signatureHash = elements[1];
+    const expectedHash = crypto.createHmac("sha256", secret).update(body).digest("hex");
 
-  const elements = signature.split("=");
-  const signatureHash = elements[1];
-  const expectedHash = crypto.createHmac("sha256", secret).update(body).digest("hex");
-
-  return signatureHash === expectedHash;
+    return signatureHash === expectedHash;
+  } catch (error) {
+    Logger.error(`[WHATSAPP] Erro ao validar assinatura do Webhook`);
+    return false;
+  }
 };
