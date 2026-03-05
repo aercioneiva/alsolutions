@@ -8,12 +8,12 @@
 - [ ] montar logica de template para envio de notificacoes (charge-notifications)
 - [ ] montar logica de template para envio de notificacoes (contract-notifications)
 - [x] implementar wait nas mensagens vinda do fluxo
-- [ ] se o usuario iniciar uma nova conversa no chatwoot, abrir um atendimento no rbx. (vai precisar voltar a salvar o cliente vinculado ao contato)
+- [x] se o usuario iniciar uma nova conversa no chatwoot, abrir um atendimento no rbx. (vai precisar voltar a salvar o cliente vinculado ao contato)
 - [x] ao abrir o chatwoot, levar todas mensagens que o usuario dirigitou no zap
 - [x] ajustar o fluxo para nao salvar o boleto completo
 - [x] apagar whatsapp_messages após 1h
 - [ ] separar cron e work da API
-- [ ] add segurança na chamada da meta para api com header
+- [x] add segurança na chamada da meta para api com header
 
 desabilitar a criação de conta pelo login do chatwoot
 https://chatwoot.aercioneiva.com/installation/onboarding (cria uma conta admin)

@@ -54,6 +54,7 @@ exports.processMessageWhatsapp = async ({ message, contacts, contract, dbId: wha
       id_whatsapp: responseCompany.id_whatsapp,
       token_whatsapp: responseCompany.token_whatsapp,
       version_whatsapp: responseCompany.version_whatsapp,
+      secret_whatsapp: responseCompany.secret_whatsapp,
       flow: responseCompany.flow,
       chatwoot_account: responseCompany.chatwoot_account,
       chatwoot_inbox: responseCompany.chatwoot_inbox,

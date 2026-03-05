@@ -445,6 +445,7 @@ async function _loadCompanyData(contract) {
     id_whatsapp: company.id_whatsapp,
     token_whatsapp: company.token_whatsapp,
     version_whatsapp: company.version_whatsapp,
+    secret_whatsapp: company.secret_whatsapp,
     flow: company.flow,
     chatwoot_account: company.chatwoot_account,
     chatwoot_inbox: company.chatwoot_inbox,
