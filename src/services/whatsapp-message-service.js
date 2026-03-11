@@ -42,7 +42,8 @@ async function _createMessage(message, metadata, contacts, contract) {
     );
     return messageId;
   } catch (error) {
-    Logger.error(`[SERVICE-MESSAGE] Erro ao cadastrar mensagem:`, error);
+    Logger.error(`[SERVICE-MESSAGE] Erro ao cadastrar mensagem:`);
+    console.error(error);
   }
 
   return null;
