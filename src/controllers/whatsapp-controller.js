@@ -49,7 +49,7 @@ exports.webhook = async (req, res) => {
 
   if (!validateSignature(req, secret_whatsapp)) {
     console.error("Assinatura do Webhook inválida!");
-    return res.sendStatus(403);
+    return res.sendStatus(200);
   }
 
   const response = await whatsappMessageService.webhook(req);
@@ -64,15 +64,19 @@ exports.webhook = async (req, res) => {
 const validateSignature = (req, secret) => {
   try {
     const signature = req.headers["x-hub-signature-256"];
-    const body = JSON.stringify(req.body);
 
-    if (!signature) return false;
+    //Usa o raw body (Buffer), não o JSON.stringify do body parseado
+    const body = req.rawBody || req.body;
 
-    const elements = signature.split("=");
-    const signatureHash = elements[1];
-    const expectedHash = crypto.createHmac("sha256", secret).update(body).digest("hex");
+    if (!signature || !body) return false;
 
-    return signatureHash === expectedHash;
+    const signatureHash = signature.split("=")[1];
+    const expectedHash = crypto
+      .createHmac("sha256", secret)
+      .update(body) // Buffer direto — sem stringify
+      .digest("hex");
+
+    return crypto.timingSafeEqual(Buffer.from(signatureHash, "hex"), Buffer.from(expectedHash, "hex"));
   } catch (error) {
     Logger.error(`[WHATSAPP] Erro ao validar assinatura do Webhook`);
     return false;

@@ -66,15 +66,17 @@ exports.deleteOldMessages = async () => {
 
 exports.webhook = async (req) => {
   try {
-    if (req.body.entry?.[0]?.changes[0]?.value?.statuses) {
+    const body = JSON.parse(req.body.toString("utf8"));
+
+    if (body.entry?.[0]?.changes[0]?.value?.statuses) {
       return new Response(true, 200, "");
     }
 
     if (process.env.NODE_ENV == "development") {
-      console.log("Zap webhook message:", JSON.stringify(req.body, null, 2));
+      console.log("Zap webhook message:", JSON.stringify(body, null, 2));
     }
 
-    if (req.body.object !== "whatsapp_business_account" || !req.body.entry || !Array.isArray(req.body.entry)) {
+    if (body.object !== "whatsapp_business_account" || !body.entry || !Array.isArray(body.entry)) {
       return new Response(false, 200, "");
     }
 
@@ -96,7 +98,7 @@ exports.webhook = async (req) => {
       }
     }
 
-    for (const entry of req.body.entry) {
+    for (const entry of body.entry) {
       for (const change of entry.changes) {
         if (change.field === "messages") {
           const value = change.value;

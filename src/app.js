@@ -34,6 +34,10 @@ app.disable("x-powered-by");
 app.use(xss());
 app.use(hpp());
 app.use("/bullmq", basicAuth, serverAdapter.getRouter());
+// Rota do webhook precisa receber o raw body
+app.use("/api/v1/whatsapp-webhook", express.raw({ type: "application/json" }));
+// As outras rotas continuam normais
+app.use(express.json());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 
