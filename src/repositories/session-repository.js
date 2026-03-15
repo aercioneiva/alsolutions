@@ -35,27 +35,15 @@ module.exports = class SessiontRepository {
 
   async create(sessionCreate) {
     const { contract, number, session, conversation, ticket } = sessionCreate;
-    let data = {
-      contract,
-      number,
-      session,
-      conversation: 0,
-      ticket: 0
-    };
 
-    if (conversation) {
-      data.conversation = conversation;
-    }
-    if (ticket) {
-      data.ticket = ticket;
-    }
-    const [id] = await db.insert(data).into("session");
+    const [{ insertId }] = await db.raw(
+      `INSERT IGNORE INTO session 
+         (contract, number, session, conversation, ticket) 
+         VALUES (?, ?, ?, ?, ?)`,
+      [contract, number, session, conversation || 0, ticket || 0]
+    );
 
-    if (id) {
-      return id;
-    }
-
-    return null;
+    return insertId || null;
   }
 
   async update(idSession, sessionUpdate) {
