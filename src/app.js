@@ -12,7 +12,7 @@ const errorHandler = require("./middleware/error-handler");
 const basicAuth = require("./middleware/basic-auth");
 
 const routes = require("./routes");
-const { ZapNotificationsQueue, HandleMessageChatWootQueue, HandleMessageWhatsappQueue, ZapQueue } = require("./libs/queue");
+const { WhatsappNotificationsQueue, HandleMessageChatWootQueue, HandleMessageWhatsappQueue, ZapQueue } = require("./libs/queue");
 
 const app = express();
 
@@ -23,7 +23,7 @@ createBullBoard({
   queues: [
     new BullMQAdapter(HandleMessageWhatsappQueue),
     new BullMQAdapter(ZapQueue),
-    new BullMQAdapter(ZapNotificationsQueue),
+    new BullMQAdapter(WhatsappNotificationsQueue),
     new BullMQAdapter(HandleMessageChatWootQueue)
   ],
   serverAdapter
@@ -34,11 +34,10 @@ app.disable("x-powered-by");
 app.use(xss());
 app.use(hpp());
 app.use("/bullmq", basicAuth, serverAdapter.getRouter());
-// Rota do webhook precisa receber o raw body
+// Rota do webhook do whatsapp precisa receber o raw body por causa da validação da assinatura, então colocamos ela antes do express.json()
 app.use("/api/v1/whatsapp-webhook", express.raw({ type: "application/json" }));
-// As outras rotas continuam normais
 app.use(express.json());
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", routes);

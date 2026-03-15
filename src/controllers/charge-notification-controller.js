@@ -2,9 +2,9 @@ const chargeNotificationService = require("../services/charge-notification-servi
 
 exports.sendNotification = async (req, res) => {
   const { contract } = req.params;
-  const { message, numbers } = req.query;
+  const { message, number } = req.query;
 
-  const sent = await chargeNotificationService.sendNotification(contract, message, numbers);
+  const sent = await chargeNotificationService.sendNotification(contract, message, number);
 
   if (!sent) {
     return res.status(400).send();

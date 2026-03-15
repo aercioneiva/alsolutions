@@ -10,7 +10,7 @@ exports.HandleMessageWhatsappQueue = new Queue("ProcessarMensagemWhatsapp", {
 exports.ZapQueue = new Queue("EnviarMensagemWhatsapp", {
   connection: createRedisConnection()
 });
-exports.ZapNotificationsQueue = new Queue("EnviarMensagemZapNotifications", {
+exports.WhatsappNotificationsQueue = new Queue("EnviarMensagemWhatsappNotifications", {
   connection: createRedisConnection()
 });
 exports.HandleMessageChatWootQueue = new Queue("ProcessarMensagemChatWoot", {
