@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 const Cache = require("../libs/cache");
 
 class FlowEngine {
@@ -7,7 +7,7 @@ class FlowEngine {
   }
 
   async iniciarFluxo(company, usuarioId) {
-    const id = uuidv4();
+    const id = randomUUID();
     await Cache.set(
       id,
       {
