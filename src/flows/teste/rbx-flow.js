@@ -1,4 +1,5 @@
 const axios = require("axios");
+const { formatarMoeda } = require("../../utils/formater");
 
 const fluxoAtendimentoRBX = {
   nome: "atendimento_rbx",
@@ -324,7 +325,7 @@ const fluxoAtendimentoRBX = {
             let mes = partesData[1];
             let dia = partesData[2];
             let ano = partesData[0];
-            let valor = parseFloat(boleto.value_init).toLocaleString("pt-BR");
+            let valor = formatarMoeda(boleto.value_init);
             return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$${valor}`;
           })
           .join("\n")
@@ -389,7 +390,7 @@ const fluxoAtendimentoRBX = {
             let mes = partesData[1];
             let dia = partesData[2];
             let ano = partesData[0];
-            let valor = parseFloat(boleto.value_init).toLocaleString("pt-BR");
+            let valor = formatarMoeda(boleto.value_init);
             return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$${valor}`;
           })
           .join("\n")
@@ -462,7 +463,7 @@ const fluxoAtendimentoRBX = {
             let mes = partesData[1];
             let dia = partesData[2];
             let ano = partesData[0];
-            let valor = parseFloat(boleto.value_init).toLocaleString("pt-BR");
+            let valor = formatarMoeda(boleto.value_init);
             return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$${valor}`;
           })
           .join("\n")
