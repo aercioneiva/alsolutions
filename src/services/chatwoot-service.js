@@ -547,7 +547,7 @@ function _createWhatsAppFileData(customerPhoneNumber, file, contract) {
   };
 
   const fileType = file.file_type;
-  const urlFile = file.data_url;
+  const urlFile = file.data_url.replace("alsolutions-chatwoot.xcwgl7.easypanel.host", "chatwoot.aercioneiva.com");
   const fileName = urlFile.split("/").at(-1);
 
   const fileConfigs = {
