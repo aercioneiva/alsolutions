@@ -74,7 +74,7 @@ exports.startChatwoot = async (chatwoot, name, customAttributes) => {
     return conversationResponse.data.id;
   } catch (error) {
     Logger.error(CONSTANTS.ERROR_MESSAGES.WEBHOOK_CREATE_CONVERSATION);
-    Logger.info(error.message);
+    console.error(error);
     return null;
   }
 };
@@ -483,19 +483,43 @@ async function _getOrCreateContact(chatwoot, name, customAttributes, headers) {
     if (response.data?.payload[0]?.contact_inboxes[0]?.source_id) {
       return response.data.payload[0].contact_inboxes[0].source_id;
     }
+
+    const newContactData = {
+      inbox_id: chatwoot.inbox,
+      name: name.replace("'", "").replace('"', "").trim(),
+      phone_number: `+${customAttributes.number}`
+    };
+
+    const newContactResponse = await axios.post(
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`,
+      newContactData,
+      headers
+    );
+
+    return newContactResponse.data.payload.contact_inbox.source_id;
   } catch (error) {
-    Logger.info(`[CHATWOOT] Contato não encontrado, criando novo: ${error.message}`);
+    Logger.info(`[CHATWOOT] Contato não encontrado, criando novo`);
+    console.error(error);
   }
 
-  const newContactData = {
-    inbox_id: chatwoot.inbox,
-    name: name.replace("'", "").replace('"', "").trim(),
-    phone_number: `+${customAttributes.number}`
-  };
+  try {
+    const newContactData = {
+      inbox_id: chatwoot.inbox,
+      name: name.replace("'", "").replace('"', "").trim(),
+      phone_number: `+${customAttributes.number}`
+    };
 
-  const newContactResponse = await axios.post(`${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`, newContactData, headers);
+    const newContactResponse = await axios.post(
+      `${process.env.CHATWOOT_URL}/accounts/${chatwoot.account}/contacts`,
+      newContactData,
+      headers
+    );
 
-  return newContactResponse.data.payload.contact_inbox.source_id;
+    return newContactResponse.data.payload.contact_inbox.source_id;
+  } catch (error) {
+    Logger.info(`[CHATWOOT] Erro ao criar contato no ChatWoot`);
+    console.error(error);
+  }
 }
 
 async function _sendSystemMessage(company, conversationId, messageContent) {

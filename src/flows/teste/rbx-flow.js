@@ -587,7 +587,7 @@ async function salvarContato({ contract, cliente }) {
   try {
     const res = await axios({
       method: "POST",
-      url: `https://alsolutions.onrender.com/api/v1/contact`,
+      url: `https://api.aercioneiva.com/api/v1/contact`,
       headers: {
         "Content-Type": "application/json"
       },
@@ -606,7 +606,7 @@ async function salvarContato({ contract, cliente }) {
     });
     return true;
   } catch (error) {
-    console.log(`[SERVICE-ALSOLUTIONS] Não conseguiu cadastrar o contato`, error);
+    console.log(`[SERVICE-ALSOLUTIONS] Não conseguiu cadastrar o contato`);
     return false;
   }
 }
