@@ -9,19 +9,24 @@ exports.sendNotification = async (contract, message, number) => {
     return false;
   }
 
-  const company = await companyService.getCompany(contract);
+  try {
+    const company = await companyService.getCompany(contract);
 
-  if (!company) {
+    if (!company) {
+      return false;
+    }
+
+    const data = {
+      message: JSON.parse(message),
+      number,
+      contract
+    };
+
+    WhatsappNotificationsQueue.add("EnviarMensagemWhatsappNotifications", data);
+  } catch (error) {
+    Logger.error("Invalid message format");
     return false;
   }
-
-  const data = {
-    message,
-    number,
-    contract
-  };
-
-  WhatsappNotificationsQueue.add("EnviarMensagemWhatsappNotifications", data);
 
   return true;
 };
