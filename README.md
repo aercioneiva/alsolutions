@@ -35,80 +35,104 @@ telefones são os números que devem receber a mensagem (para vários números s
 
 CREATE DATABASE alsolutions;
 
-CREATE TABLE whatsapp_messages (
-id BIGINT PRIMARY KEY AUTO_INCREMENT,
-message_id VARCHAR(255) UNIQUE,
-user_id VARCHAR(255) NOT NULL,
-session_id bigint(18) NULL,
-phone_number VARCHAR(50) NOT NULL,
-message_data JSON NOT NULL,
-status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
-attempts INT DEFAULT 0,
-error_message TEXT,
-created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-processed_at DATETIME NULL,
-INDEX idx_user_status (user_id, status, created_at),
-INDEX idx_status_created (status, created_at),
-INDEX idx_phone (phone_number),
-INDEX session_id (session_id)
-) ENGINE=InnoDB;
+CREATE TABLE `company` (
+`id` bigint(18) NOT NULL AUTO_INCREMENT,
+`name` varchar(100) NOT NULL,
+`contract` varchar(50) NOT NULL,
+`id_whatsapp` varchar(50) NOT NULL,
+`token_whatsapp` varchar(255) NOT NULL,
+`version_whatsapp` varchar(10) NOT NULL,
+`secret_whatsapp` varchar(255) NOT NULL,
+`flow` varchar(50) NOT NULL,
+`chatwoot_account` int(5) NOT NULL,
+`chatwoot_inbox` int(5) NOT NULL,
+`chatwoot_token` varchar(100) NOT NULL,
+`downtime` int(3) NOT NULL,
+`system` varchar(60) NOT NULL,
+`host` varchar(255) NOT NULL,
+`key_integration` varchar(100) NOT NULL,
+`rbx_account` bigint(15) NOT NULL,
+`rbx_user` varchar(20) NOT NULL,
+`fluxo` int(3) NOT NULL,
+`topico` int(5) NOT NULL,
+`cause` int(5) NOT NULL,
+`status` char(1) NOT NULL,
+PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE company(
-id bigint(18) PRIMARY KEY AUTO_INCREMENT,
-contract uuid NOT NULL,
-name VARCHAR(100) NOT NULL,
-contract uuid NOT NULL,
-id_whatsapp VARCHAR(50) NOT NULL,
-token_whatsapp VARCHAR(255) NOT NULL,
-version_whatsapp VARCHAR(10) NOT NULL,
-secret_whatsapp VARCHAR(255) NOT NULL,
-flow VARCHAR(50) NOT NULL,
-chatwoot_account INT(5) NOT NULL,
-chatwoot_inbox INT(5) NOT NULL,
-chatwoot_token VARCHAR(100) NOT NULL,
-downtime INT(3) NOT NULL,
-system VARCHAR(60) NOT NULL,
-host VARCHAR(255) NOT NULL,
-key_integration varchar(100) NOT NULL,
-rbx_account bigint(15) NOT NULL,
-rbx_user VARCHAR(20) NOT NULL,
-fluxo int(3) NOT NULL,
-topico int(5) NOT NULL,
-cause int(5) NOT NULL,
-status char(1) NOT NULL
-);
+INSERT INTO `company` (`id`, `name`, `contract`, `id_whatsapp`, `token_whatsapp`, `version_whatsapp`, `secret_whatsapp`, `flow`, `chatwoot_account`, `chatwoot_inbox`, `chatwoot_token`, `downtime`, `system`, `host`, `key_integration`, `rbx_account`, `rbx_user`, `fluxo`, `topico`, `cause`, `status`) VALUES
+(1, 'my company', '1220f3e9-f792-40cd-937a-f9fc6f79395f', '238910019300032', 'EAAMsez0q62sBQakDv1EO20PfaunBkqVxVxG81XywEEbmwzv61Xoyx3GkMApp0KJXgLo4aGdnKnhZAxZA5ZCFqHW5MDKkAZAzoUSZARZAl3Qg302ctPndhNUsxEopGieP4BJFjIqAfkUovJxeg6AKtbKWd3vOi7tElLgczBMPv6ffUYzyZCsTVeVUFfs7OjBLgZDZD', 'v25.0', 'c48bdf55806013fe55be13b978916e3d', 'teste', 1, 1, 'LM5p5ENsWKeGcGCtDtfgmfJD', 5, 'routerbox', 'https://desenv-deb12.rbxsoft.com', 'UZ2H3FF7YBAHTHZW8DRZ6T2L3RAV85', 3, 'aercio', 0, 14, 2, 'A');
 
-CREATE TABLE contact(
-id bigint(18) PRIMARY KEY AUTO_INCREMENT,
-contract uuid NOT NULL,
-number VARCHAR(20) NOT NULL,
-name VARCHAR(100) NOT NULL,
-last_message DATETIME DEFAULT NULL,
-created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-UNIQUE KEY uk_contact_number (number)
-);
+DROP TABLE IF EXISTS `contact`;
+CREATE TABLE `contact` (
+`id` bigint(18) NOT NULL AUTO_INCREMENT,
+`contract` varchar(50) NOT NULL,
+`number` varchar(20) NOT NULL,
+`name` varchar(100) NOT NULL,
+`last_message` datetime DEFAULT NULL,
+`created_at` datetime NOT NULL DEFAULT current_timestamp(),
+`updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+PRIMARY KEY (`id`),
+UNIQUE KEY `uk_contact_number` (`number`),
+KEY `contract_number` (`contract`,`number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+INSERT INTO `contact` (`id`, `contract`, `number`, `name`, `last_message`, `created_at`, `updated_at`) VALUES
+(9, '1220f3e9-f792-40cd-937a-f9fc6f79395f', '554498004059', 'Aercio Bom Pagador', '2026-03-14 20:25:05', '2026-03-01 21:37:26', '2026-03-14 20:25:05'),
+(10, '1220f3e9-f792-40cd-937a-f9fc6f79395f', '554498009387', 'Aercio Bom Pagador', '2026-03-03 22:03:44', '2026-03-01 21:37:26', '2026-03-03 22:03:44');
+
+DROP TABLE IF EXISTS `contact_customer`;
 CREATE TABLE `contact_customer` (
-`id` bigint(18) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+`id` bigint(18) NOT NULL AUTO_INCREMENT,
 `contact_id` bigint(18) NOT NULL,
 `name` varchar(100) NOT NULL,
 `document` varchar(19) NOT NULL,
 `code` varchar(36) NOT NULL,
-`created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-`updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-FOREIGN KEY (`contact_id`) REFERENCES `contact` (`id`) ON DELETE RESTRICT
-);
+`created_at` datetime NOT NULL DEFAULT current_timestamp(),
+`updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+PRIMARY KEY (`id`),
+KEY `contact_id` (`contact_id`),
+CONSTRAINT `contact_customer_ibfk_1` FOREIGN KEY (`contact_id`) REFERENCES `contact` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE session(
-id bigint(18) PRIMARY KEY AUTO_INCREMENT,
-contract uuid NOT NULL,
-number VARCHAR(20) NOT NULL,
-session VARCHAR(60) NOT NULL,
-conversation bigint NOT NULL,
-ticket bigint NOT NULL,
-updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+INSERT INTO `contact_customer` (`id`, `contact_id`, `name`, `document`, `code`, `created_at`, `updated_at`) VALUES
+(8, 9, 'Aercio Bom Pagador', '06533029916', '489', '2026-03-01 21:37:26', '2026-03-01 21:37:26'),
+(10, 10, 'Wila da silva', '06533029916', '111', '2026-03-01 21:37:26', '2026-03-01 21:37:26');
+
+DROP TABLE IF EXISTS `session`;
+CREATE TABLE `session` (
+`id` bigint(18) NOT NULL AUTO_INCREMENT,
+`contract` varchar(50) NOT NULL,
+`number` varchar(20) NOT NULL,
+`session` varchar(60) NOT NULL,
+`conversation` bigint(20) NOT NULL,
+`ticket` bigint(20) NOT NULL,
+`updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+PRIMARY KEY (`id`),
+UNIQUE KEY `number` (`number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+DROP TABLE IF EXISTS `whatsapp_messages`;
+CREATE TABLE `whatsapp_messages` (
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`contract` varchar(50) NOT NULL,
+`message_id` varchar(255) DEFAULT NULL,
+`user_id` varchar(255) NOT NULL,
+`session_id` bigint(18) DEFAULT NULL,
+`phone_number` varchar(50) NOT NULL,
+`message_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`message_data`)),
+`status` enum('pending','processing','completed','failed') DEFAULT 'pending',
+`attempts` int(11) DEFAULT 0,
+`error_message` text DEFAULT NULL,
+`created_at` datetime DEFAULT current_timestamp(),
+`processed_at` datetime DEFAULT NULL,
+PRIMARY KEY (`id`),
+UNIQUE KEY `message_id` (`message_id`),
+KEY `idx_user_status` (`user_id`,`status`,`created_at`),
+KEY `idx_status_created` (`status`,`created_at`),
+KEY `idx_phone` (`phone_number`),
+KEY `session_id` (`session_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 ALTER TABLE `contact`
 ADD INDEX `contract_number` (`contract`, `number`);
@@ -169,3 +193,31 @@ Logger.error('Error getting cache:', error);
 return null;
 }
 }
+
+```
+{
+    "nome_template": "cobranca_pix",
+    "params": {
+        "nome_cliente": "|NOME|",
+        "status_vencimento": "consta débitos em aberto. Após o pagamento, seus serviços serão restabelecidos em poucos minutos. Seguem as opções de pagamento."
+    },
+    "order_details": {
+        "valor": "|DOCUMENTO_VALOR_TOTAL| ",
+        "copia_e_cola": "|PIX_COPIA_E_COLA|",
+        "linha_digitavel": "|LINHA_DIGITAVEL|"
+    }
+}
+
+{
+    "nome_template": "cobranca_pix",
+    "params": {
+        "nome_cliente": "|NOME|",
+        "status_vencimento": "ainda não foi quitada, RESPONDA essa mensagem para agendamento da retirada dos equipamentos e evite a cobrança de MULTA referente ao equipamento em comodato!"
+    },
+    "order_details": {
+        "valor": "|DOCUMENTO_VALOR_TOTAL|",
+        "copia_e_cola": "|PIX_COPIA_E_COLA|",
+        "linha_digitavel": "|LINHA_DIGITAVEL|"
+    }
+}
+```

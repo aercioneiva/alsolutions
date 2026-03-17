@@ -6,6 +6,8 @@ const db = require("./db/connection.js");
 const HandleMessageWhatsapp = require("./queue-jobs/handle-message-whatsapp");
 const HandleMessageChatWoot = require("./queue-jobs/handle-message-chatwoot");
 const enviarMensagemWhatsapp = require("./queue-jobs/enviar-mensagem-whatsapp");
+const enviarMessageWhatsappNotification = require("./queue-jobs/enviar-mensagem-whatsapp-notifications");
+
 const Lock = require("./utils/lock");
 const Logger = require("./libs/logger");
 
@@ -63,7 +65,23 @@ const sendWhatsappWorker = new Worker(
   },
   {
     connection: createRedisConnection(),
-    concurrency: 10, // Processa até 10 jobs simultaneamente
+    concurrency: 5, // Processa até 10 jobs simultaneamente
+    limiter: {
+      max: 100 // Máximo 100 jobs
+    }
+  }
+);
+
+const enviarMessageWhatsappNotificationWorker = new Worker(
+  "EnviarMensagemWhatsappNotifications",
+  async (job) => {
+    try {
+      await enviarMessageWhatsappNotification.handle(job.data, job);
+    } catch (error) {}
+  },
+  {
+    connection: createRedisConnection(),
+    concurrency: 5, // Processa até 10 jobs simultaneamente
     limiter: {
       max: 100 // Máximo 100 jobs
     }
@@ -140,6 +158,7 @@ process.on("SIGTERM", async () => {
   await whatsappWorker.close();
   await chatWootWorker.close();
   await sendWhatsappWorker.close();
+  await enviarMessageWhatsappNotificationWorker.close();
   process.exit(0);
 });
 
@@ -148,5 +167,6 @@ process.on("SIGINT", async () => {
   await whatsappWorker.close();
   await chatWootWorker.close();
   await sendWhatsappWorker.close();
+  await enviarMessageWhatsappNotificationWorker.close();
   process.exit(0);
 });

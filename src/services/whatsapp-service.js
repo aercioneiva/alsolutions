@@ -10,6 +10,10 @@ const { getFileWhatsapp } = require("../utils/get-file-whatsapp");
 const { enviarMensagemZapMeta } = require("../utils/send-message-whatsapp");
 const { enviarMensagemChatWoot } = require("../utils/send-message-chatwoot");
 
+exports.sendMessageWhatsappNotificaion = async (whatsapp, data) => {
+  await enviarMensagemZapMeta(whatsapp, data);
+};
+
 exports.sendMessageWhatsapp = async (data) => {
   const whatsapp = {
     id: data.id_whatsapp,

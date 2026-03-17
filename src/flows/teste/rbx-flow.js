@@ -326,7 +326,7 @@ const fluxoAtendimentoRBX = {
             let dia = partesData[2];
             let ano = partesData[0];
             let valor = formatarMoeda(boleto.value_init);
-            return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$${valor}`;
+            return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$ ${valor}`;
           })
           .join("\n")
           .concat(`\n▶️ 0 - Voltar ao menu financeiro`);
@@ -391,7 +391,7 @@ const fluxoAtendimentoRBX = {
             let dia = partesData[2];
             let ano = partesData[0];
             let valor = formatarMoeda(boleto.value_init);
-            return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$${valor}`;
+            return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$ ${valor}`;
           })
           .join("\n")
           .concat(`\n▶️ 0 - Voltar ao menu financeiro`);
@@ -464,7 +464,7 @@ const fluxoAtendimentoRBX = {
             let dia = partesData[2];
             let ano = partesData[0];
             let valor = formatarMoeda(boleto.value_init);
-            return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$${valor}`;
+            return `▶️ ${index + 1} - ${dia}/${mes}/${ano} Valor R$ ${valor}`;
           })
           .join("\n")
           .concat(`\n▶️ 0 - Voltar ao menu financeiro`);
